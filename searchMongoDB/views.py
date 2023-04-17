@@ -79,10 +79,10 @@ def search_results(request):
                         # when a document is found, record it and the rest of the matching documents to a list
                         for eachEntry in collection_name.find({SEARCH_YEAR_TYPE: int(val)}):
                             if (eachEntry['winner'] == "True"): # If the entry was a Academy Award Winner
-                                academySearchResultsList.append(f"{eachEntry['name']} won the award for \n\"Best {eachEntry['category'].capitalize()}\" for their role in \"{eachEntry['film']}\"")
+                                academySearchResultsList.append(f"{eachEntry['name']} won the award for \"Best {eachEntry['category'].capitalize()}\" for their role in \"{eachEntry['film']}\"")
                                 print("Entry recorded.")
                             else: # If they were not an award winner
-                                academySearchResultsList.append(f"{eachEntry['name']} was nominated for the award \n\"Best {eachEntry['category'].capitalize()}\" for their role in \"{eachEntry['film']}\"")
+                                academySearchResultsList.append(f"{eachEntry['name']} was nominated for the award \"Best {eachEntry['category'].capitalize()}\" for their role in \"{eachEntry['film']}\"")
                                 print("Entry recorded.")
                     #else there is not one to find
                     else:
