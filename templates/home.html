@@ -1,0 +1,73 @@
+{% extends 'navbar.html' %}
+
+<!--Load Bootstrap CSS-->
+{% load static %}
+
+{% block content %}
+<!-- Page Contents -->
+<table>
+  <tr>
+    <th>
+      <div class="card" style="width: 18rem;">
+          <img src="{% static 'imgs/professorMarkAinsley.jpg' %}" class="card-img-top" alt="Image of Professor Ainsley.">
+          <div class="card-body">
+            <h5 class="card-title">The Professor</h5>
+            <p class="card-text">Heres an image of the professor called from globalStatic.</p>
+            <a href="https://www.linkedin.com/in/mark-ainsley-7b70921/" class="btn btn-primary">The professor's LinkedIn</a>
+          </div>
+      </div>
+    </th>
+    <th>
+      <div class="card" style="width: 18rem;">
+          <img src="{% static 'home/imgs/professorMarkAinsleyCartoonMad.jpg' %}" class="card-img-top" alt="Image of Professor Ainsley but MAD."> <!--The professor has a linked in: https://www.linkedin.com/in/mark-ainsley-7b70921/-->
+          <div class="card-body">
+            <h5 class="card-title">The Professor Mad (There's a UI)</h5>
+            <p class="card-text">Heres an image of the professor called from local static.</p>
+            <a href="https://theuselessweb.com/" class="btn btn-primary">In theory, this COULD go somewhere...</a>
+          </div>
+      </div>
+    </th>
+    <th>
+      <div class="card" style="width: 18rem;">
+          <img src="https://media.licdn.com/dms/image/C5603AQERTD_EeJiGlA/profile-displayphoto-shrink_200_200/0/1661816468423?e=1683158400&v=beta&t=f1Wy2XFifGEGjy6hvrOhLacspvTq6vN1H1z2lEU8TZQ" class="card-img-top" alt="Picture of Bill Gates."> <!--The professor has a linked in: https://www.linkedin.com/in/mark-ainsley-7b70921/-->
+          <div class="card-body">
+            <h5 class="card-title">The Professor's Top Voice</h5>
+            <p class="card-text">SMH. Seriously? The guy that jumps chairs in ONE JUMP?</p>
+            <a href="https://www.linkedin.com/in/williamhgates/" class="btn btn-primary">Bill Gate's LinkedIn</a>
+          </div>
+      </div>
+    </th>
+  </tr>
+  <tr>
+    <th>
+      <div class="card" style="width: 18rem;">
+        <img src="https://clipground.com/images/mongodb-png-logo-4.jpg" class="card-img-top" alt="mongoDB Logo">
+        <div class="card-body">
+          <h5 class="card-title">Search MongoDB</h5>
+          <p class="card-text">Go here to search Oscar Winners and Academy Award winners by year.</p>
+          <a href="{% url 'searchPage'%}" class="btn btn-primary">Go to searchMongoDB Django App</a>
+        </div>
+      </div>
+    </th>
+    <th>
+      <div class="card" style="width: 18rem;">
+        <img src="https://www.jadsmkbdatalab.nl/wp-content/uploads/2021/03/OMDB-API_logo.png" class="card-img-top" alt="mongoDB Logo">
+        <div class="card-body">
+          <h5 class="card-title">Search OMDb</h5>
+          <p class="card-text">Go here to search OMDb by name.</p>
+          <a href="{% url 'searchPage'%}" class="btn btn-primary">Go to searchMongoDB Django App</a>
+        </div>
+      </div>
+    </th>
+  </tr>
+</table>
+
+<!--This displays the statement-->
+Hello World!
+<p>
+<!--This couts a variable from the views.py file-->
+Today is {{today}}
+</p>
+
+{% endblock %}
+

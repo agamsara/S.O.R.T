@@ -13,16 +13,13 @@ Including another URLconf
     1. Import the include() function: from django.urls import include, path
     2. Add a URL to urlpatterns:  path('blog/', include('blog.urls'))
 """
-from django.contrib import admin
-from django.urls import path, include
-from django.conf.urls import include
+from django.urls import path
+from . import views
 
 urlpatterns = [
-    path('admin/', admin.site.urls),
-
-    # Launch the home app immediately on joining the server!
-    path('', include('home.urls')),
-
-    # add any URLs from the searchMongoDB urls file
-    path('searchMongoDB', include('searchMongoDB.urls'))
+    # this page will now appear when the url ends with "/searchMongoDB". 
+    # It will run the index function defined in views.py. 
+    # It uses name for the index.html in home to call for hyperlinking
+    path('', views.index, name='searchPage'),
+    path('search_results', views.search_results, name='search_results')
 ]

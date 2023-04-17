@@ -6,40 +6,38 @@ import pymongo
 
 # This is the MongoDB connection string, its currently using my (Connor Puckett) log in credentials, probably need to obfuscate somehow
 CONNECTION_STRING = "mongodb+srv://Con-Rez:KVc5QUF3bZdic8ig@academyawardscluster.kghzx33.mongodb.net/?retryWrites=true&w=majority"
+
+DATABASE_USED = 'AcademyAwardsDocuments'
+COLLECTION_USED = "AcademyAwardsMaster"
+
 # Display warning this is for testing only
 print ("Connction String created from hardcoded entry from Con-Rez's account. It would be better to prompt for a username and password here instead of doing this.\n")
 
 # Attempt MongoDB Connection
+print ("Initializing Database ",DATABASE_USED," and it's Collection ",COLLECTION_USED ,"...")
 while True:
     print ("Attempting a connection using the credentials...")
     try:
         client = pymongo.MongoClient(CONNECTION_STRING) # Connect to MongoDB, create a MongoClient
-        db = client.test
+        database_name = client[DATABASE_USED] # Access database
+        collection_name = database_name[COLLECTION_USED] # Access Collection within database
         print("Connected successfully!!!\n")
         break
     except:  
         print("Could not connect to MongoDB, retrying...\n")
 
+print
 # Use to download kaggle database using API command (might be useful): kaggle datasets download -d unanimad/the-oscar-award
 
 # Get the database for our example
 # NOTE: These aren't created if no data is written to them when running this
-while True:
-    print ("Initializing Database 'AcademyAwardsDocuments' and it's Collection 'AcademyAwardsTest'...")
-    try:
-        database_name = client['AcademyAwardsDocuments'] # Access database
-        collection_name = database_name["AcademyAwardsTest"] # Access Collection within database
-        print ("Done!\n")
-        break
-    except:  
-        print("Failed! Retrying...\n")
 
 # Main Menu
 while True:
     print ("=== MAIN MENU ===\nType one of the following numbers and hit enter to begin test of MongoDB")
-    print ("1 - NOT RECOMMENDED TO USE: Mass Insert hardcoded entries to MongoDB's 'AcademyAwardsTest' Collection.")
-    print ("2 - Display all entries in both a not clean and clean way from the 'AcademyAwardsTest' Collection")
-    print ("3 - Insert a hardcoded entry into MongoDB's 'AcademyAwardsTest' Collection. Check for a duplicate before doing so.")
+    print ("1 - NOT RECOMMENDED TO USE: Mass Insert hardcoded entries to MongoDB's ",COLLECTION_USED ," Collection.")
+    print ("2 - Display all entries in both a not clean and clean way from the ",COLLECTION_USED ," Collection")
+    print ("3 - Insert a hardcoded entry into MongoDB's ",COLLECTION_USED ," Collection. Check for a duplicate before doing so.")
     print ("4 - Input a year, search for and return all entries containing that year. ")
     print ("5 - Delete a document based on Year and Actor Name. ")
     print ("8 - ALREADY DONE, CODE INCLUDED FOR REFERENCE: Index the Academy Award Test Collections")
@@ -66,9 +64,9 @@ while True:
             
                     #Add these entries
                     item_1 = {
-                    "year_film" : "2024",
-                    "year_ceremony" : "2024",
-                    "ceremony" : "9",
+                    "year_film" : 2024,
+                    "year_ceremony" : 2024,
+                    "ceremony" : 9,
                     "category" : "TEST",
                     "name" : "Connor Puckett",
                     "film" : "Test for MongoDB: A Database Like No Other",
@@ -76,9 +74,9 @@ while True:
                     }
 
                     item_2 = {
-                    "year_film" : "2025",
-                    "year_ceremony" : "2025",
-                    "ceremony" : "10",
+                    "year_film" : 2025,
+                    "year_ceremony" : 2025,
+                    "ceremony" : 10,
                     "category" : "TEST",
                     "name" : "Ryan Desagun",
                     "film" : "Test for MongoDB Part 2: The Rise of Ainsley",
@@ -138,9 +136,9 @@ while True:
 
                     #Add this entry
                     item_3 = {
-                    "year_film" : "2025",
-                    "year_ceremony" : "2025",
-                    "ceremony" : "10",
+                    "year_film" : 2025,
+                    "year_ceremony" : 2025,
+                    "ceremony" : 10,
                     "category" : "TEST",
                     "name" : "Caleb Trathen",
                     "film" : "Test for MongoDB Part 3: Ainsley Strikes Back",
@@ -174,8 +172,8 @@ while True:
 
             # Check for duplicate before doing so
             try:
-                if collection_name.find_one({"year_film": val}):
-                    for eachEntry in collection_name.find({"year_film": val}):
+                if collection_name.find_one({"year_film": int(val)}):
+                    for eachEntry in collection_name.find({"year_film": int(val)}):
                         print("Winner Name:", eachEntry['name'],"\nFilm they starred in:", eachEntry['film'],"\nDid they Win a Academy Award?:", eachEntry['winner'], "\n")
                 else:
                     print ("Match not found.\n")
@@ -194,11 +192,11 @@ while True:
 
             # Check for duplicate before doing so
             try:
-                if collection_name.find_one({"year_film": val1, "name": val2}):
+                if collection_name.find_one({"year_film": int(val1), "name": val2}):
                     print ("Would you like to delete the following document?\n")
                     
                     #Display selected Docs
-                    for eachEntry in collection_name.find({"year_film": val1, "name": val2}):
+                    for eachEntry in collection_name.find({"year_film": int(val1), "name": val2}):
                         print("Winner Name:", eachEntry['name'],"\nFilm they starred in:", eachEntry['film'],"\nDid they Win a Academy Award?:", eachEntry['winner'], "\n")
                     
                     val = input ("Enter 'y' if you would like to delete the above document. Enter 'n' to return to Main Menu.\n> ")
@@ -208,7 +206,7 @@ while True:
 
                     match val:
                         case 'y':
-                            collection_name.delete_one({"year_film": val1, "name": val2})
+                            collection_name.delete_one({"year_film": int(val1), "name": val2})
                             print ("\nSelected document deleted.\n")
                         case 'n':
                             print ("\nDeletion canceled\n")
