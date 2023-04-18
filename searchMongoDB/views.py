@@ -48,7 +48,8 @@ def search_results(request):
         # get search input from search bar
         val = request.POST['searchInputFromNavbar']
 
-#TO DO: As much as this implementation works, movies named after years or numbers like "2012" and "9" don't work under this logic. We'll need to find a way to confirm the type the person is searching
+# TO DO: As much as this implementation works, movies named after years or numbers like "2012" and "9" don't work under this logic. 
+# We'll need to find a way to confirm the type the person is searching
         # Check input
         try:
             if (1926 < int(val) < 2025):
