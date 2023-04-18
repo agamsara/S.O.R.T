@@ -1,0 +1,81 @@
+{% extends 'navbar.html' %}
+
+{% block content %}
+<center>
+  <!--If search Valid-->
+  {% if searched %}
+    <!--Display what was searched-->
+    <h1>You searched for {{ searched }}</h1>
+
+    <!--List results as table reading from list-->
+    <table style="border:1px solid black;margin-top:15px;width:50%;float: left">
+      <thead>
+        <tr>
+          <th>Academy Awards Results</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for a in academyResultsList %} <!-- For loop until all results listed-->
+          <tr>
+            <td style="width:33%;border:1px solid black;">{{ a }}</td>
+          </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+
+    <table style="border:1px solid black;margin-top:15px;width:50%;float: right">
+      <thead>
+        <tr>
+          <th>Oscar Awards Results</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for o in oscarResultsList %} <!-- For loop until all results listed-->
+        <tr>
+            <td style="width:33%;border:1px solid black;">{{ o }}</td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+
+  {% elif Title %}
+    <!--Display what was searched-->
+    <h1>You searched for {{ Title }}</h1>
+    <table style="border:1px solid black;margin-top:15px;width:100%;float: center">
+      <thead>
+        <tr>
+          <th colspan="2" style="text-align: center">OMDB Info</th>
+        </tr>
+      </thead>
+      <tbody style="width:33%;border:1px solid black;">
+        <tr>
+          <th>Title</th>
+          <td>{{Title}}</td>
+        </tr>
+        <tr>
+          <th>Year Released</th>
+          <td>{{Year}}</td>
+        </tr>
+        <tr>
+          <th>Director(s)</th>
+          <td>{{Director}}</td>
+        </tr>
+        <tr>
+          <th>Language</th>
+          <td>{{Language}}</td>
+        </tr>
+      </tbody>
+    </table>
+  <!--If The search was empty, invalid, or errored.-->
+  {% else %}  
+    <h1>
+      Value not found
+    </h1>
+    <body>
+      {{ errorReport }}
+    </body>
+
+  {% endif %}
+</center>
+
+{% endblock %}

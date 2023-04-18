@@ -1,8 +1,10 @@
+<!--Load Bootstrap CSS-->
+{% load static %}
 
 <!DOCTYPE html>
 <html>
 <head>
-    
+  <!-- My brother in christ Andrew if you don't fix this title by our demo i'm throwing you under the bus for it -->
     <center><big>SORT of Awesome Webstite</big></center>
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.0/css/font-awesome.min.css">
 <style>
@@ -84,20 +86,35 @@ body {
 </head>
 <body>
 
+  <link
+  rel="stylesheet"
+  type="text/css"
+  href="{% static 'home/css/bootstrap.css' %}"
+  />
+  
+<body>
+
 <div class="topnav">
-  <a class="active" href="#home">Home</a>
-  <a href="#about">About</a>
-  <a href="#contact">Contact</a>
+  <a class="active" href="{% url 'home'%}">Home</a>
+  <a href="{% url 'about'%}">About</a>
+  <a href="{% url 'contact'%}">Contact</a>
+
+  <!--Search Bar-->
   <div class="search-container">
-    <form action="/action_page.php">
-      <input type="text" placeholder="Search.." name="search">
+    <form method=POST action="{% url 'search_results' %}"> <!--Using form method post to detect if the search is empty-->
+      {% csrf_token %}
+      <input type="text" placeholder="Search..." name="searchInputFromNavbar"> <!-- To reference this in views.py, use the name here-->
       <button type="submit"><i class="fa fa-search"></i></button>
     </form>
   </div>
+
 </div>
 
 <div style="padding-left:16px">
 </div>
 
-</body>
+<!--Insert Webpage content here-->
+{% block content %}
+{% endblock %}
+
 </html>
