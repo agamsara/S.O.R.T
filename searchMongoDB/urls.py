@@ -15,11 +15,13 @@ Including another URLconf
 """
 from django.urls import path
 from . import views
+from searchMongoDB.views import get_search_history
 
 urlpatterns = [
     # this page will now appear when the url ends with "/searchMongoDB". 
     # It will run the index function defined in views.py. 
     # It uses name for the index.html in home to call for hyperlinking
     path('', views.index, name='searchPage'),
-    path('search_results', views.search_results, name='search_results')
+    path('search_results/', views.search_results, name='search_results'),
+    path('search-history/', get_search_history, name='search_history'),
 ]

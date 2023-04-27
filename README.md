@@ -1,7 +1,7 @@
 # S.O.R.T
 CSC 131 Project
 
-
+Connor's Changes to the S.O.R.T. Project
 
 //For python access to mongo
 - pip install pymongo
@@ -19,6 +19,3 @@ Contributions:
 - Added intial python file.
 - Added Django and Bootstrap v5.3 with webserver functionality. Included demo webpage.
 - Added Oleksandr's OMDB Search implemention, Andrew's Navbar for searching and navigation, my MongoDB Search implementation
-=======
-
-
