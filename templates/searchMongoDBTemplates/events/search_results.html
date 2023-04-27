@@ -1,81 +1,78 @@
 {% extends 'navbar.html' %}
 
 {% block content %}
-<center>
-  <!--If search Valid-->
-  {% if searched %}
-    <!--Display what was searched-->
-    <h1>You searched for {{ searched }}</h1>
+  <center>
+    <!--If search Valid-->
+    {% if searched %}
+      <!--Display what was searched-->
+      <h1>You searched for "{{ searched }}"</h1>
 
-    <!--List results as table reading from list-->
-    <table style="border:1px solid black;margin-top:15px;width:50%;float: left">
-      <thead>
-        <tr>
-          <th>Academy Awards Results</th>
-        </tr>
-      </thead>
-      <tbody>
-        {% for a in academyResultsList %} <!-- For loop until all results listed-->
+      <!--List results as table reading from list-->
+      <div style="display: flex; justify-content: space-between;">
+        <table style="border: 1px solid black; margin-top: 15px; width: 48%;">
+          <thead>
+            <tr>
+              <th style="background-color: lightgray; padding: 10px;">Academy Awards Results</th>
+            </tr>
+          </thead>
+          <tbody>
+            {% for a in academyResultsList %}
+              <tr>
+                <td style="width: 100%; border: 1px solid black; padding: 5px;">{{ a }}</td>
+              </tr>
+            {% endfor %}
+          </tbody>
+        </table>
+
+        <table style="border: 1px solid black; margin-top: 15px; width: 48%;">
+          <thead>
+            <tr>
+              <th style="background-color: lightgray; padding: 10px;">Oscar Awards Results</th>
+            </tr>
+          </thead>
+          <tbody>
+            {% for o in oscarResultsList %}
+              <tr>
+                <td style="width: 100%; border: 1px solid black; padding: 5px;">{{ o }}</td>
+              </tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+
+    {% elif Title %}
+      <!--Display what was searched-->
+      <h1>You searched for "{{ Title }}"</h1>
+      <table style="border: 1px solid black; margin-top: 15px; width: 50%;">
+        <thead>
           <tr>
-            <td style="width:33%;border:1px solid black;">{{ a }}</td>
+            <th colspan="2" style="background-color: lightgray; padding: 10px; text-align: center;">OMDB Info</th>
           </tr>
-        {% endfor %}
-      </tbody>
-    </table>
+        </thead>
+        <tbody>
+          <tr>
+            <th style="width: 30%; border: 1px solid black; padding: 5px;">Title</th>
+            <td style="width: 70%; border: 1px solid black; padding: 5px;">{{ Title }}</td>
+          </tr>
+          <tr>
+            <th style="width: 30%; border: 1px solid black; padding: 5px;">Year Released</th>
+            <td style="width: 70%; border: 1px solid black; padding: 5px;">{{ Year }}</td>
+          </tr>
+          <tr>
+            <th style="width: 30%; border: 1px solid black; padding: 5px;">Director(s)</th>
+            <td style="width: 70%; border: 1px solid black; padding: 5px;">{{ Director }}</td>
+          </tr>
+          <tr>
+            <th style="width: 30%; border: 1px solid black; padding: 5px;">Language</th>
+            <td style="width: 70%; border: 1px solid black; padding: 5px;">{{ Language }}</td>
+          </tr>
+        </tbody>
+      </table>
 
-    <table style="border:1px solid black;margin-top:15px;width:50%;float: right">
-      <thead>
-        <tr>
-          <th>Oscar Awards Results</th>
-        </tr>
-      </thead>
-      <tbody>
-        {% for o in oscarResultsList %} <!-- For loop until all results listed-->
-        <tr>
-            <td style="width:33%;border:1px solid black;">{{ o }}</td>
-        </tr>
-        {% endfor %}
-      </tbody>
-    </table>
-
-  {% elif Title %}
-    <!--Display what was searched-->
-    <h1>You searched for {{ Title }}</h1>
-    <table style="border:1px solid black;margin-top:15px;width:100%;float: center">
-      <thead>
-        <tr>
-          <th colspan="2" style="text-align: center">OMDB Info</th>
-        </tr>
-      </thead>
-      <tbody style="width:33%;border:1px solid black;">
-        <tr>
-          <th>Title</th>
-          <td>{{Title}}</td>
-        </tr>
-        <tr>
-          <th>Year Released</th>
-          <td>{{Year}}</td>
-        </tr>
-        <tr>
-          <th>Director(s)</th>
-          <td>{{Director}}</td>
-        </tr>
-        <tr>
-          <th>Language</th>
-          <td>{{Language}}</td>
-        </tr>
-      </tbody>
-    </table>
-  <!--If The search was empty, invalid, or errored.-->
-  {% else %}  
-    <h1>
-      Value not found
-    </h1>
-    <body>
-      {{ errorReport }}
-    </body>
-
-  {% endif %}
-</center>
-
+    <!--If The search was empty, invalid, or errored.-->
+    {% else %}  
+      <h1>Value not found</h1>
+      <p>{{ errorReport }}</p>
+    {% endif %}
+  </center>
 {% endblock %}
