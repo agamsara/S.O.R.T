@@ -15,6 +15,9 @@ Connor's Changes to the S.O.R.T. Project
 //For using imdb
 - pip install cinemagoer
 
+//For Djano Rest Framework
+- pip install djangorestframework
+
 Contributions:
 - Added intial python file.
 - Added Django and Bootstrap v5.3 with webserver functionality. Included demo webpage.
