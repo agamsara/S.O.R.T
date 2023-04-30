@@ -1,45 +1,37 @@
 {% extends 'navbar.html' %}
-
 {% block content %}
   <center>
     <!--If search Valid-->
     {% if searched %}
-      <!--Display what was searched-->
+
+      <!--If search is a year-->
       <h1>You searched for "{{ searched }}"</h1>
 
       <!--List results as table reading from list-->
-      <div style="display: flex; justify-content: space-between;">
-        <table style="border: 1px solid black; margin-top: 15px; width: 48%;">
-          <thead>
-            <tr>
-              <th style="background-color: lightgray; padding: 10px;">Academy Awards Results</th>
-            </tr>
-          </thead>
-          <tbody>
-            {% for a in academyResultsList %}
-              <tr>
-                <td style="width: 100%; border: 1px solid black; padding: 5px;">{{ a }}</td>
-              </tr>
-            {% endfor %}
-          </tbody>
-        </table>
-
-        <table style="border: 1px solid black; margin-top: 15px; width: 48%;">
-          <thead>
-            <tr>
-              <th style="background-color: lightgray; padding: 10px;">Oscar Awards Results</th>
-            </tr>
-          </thead>
-          <tbody>
-            {% for o in oscarResultsList %}
-              <tr>
-                <td style="width: 100%; border: 1px solid black; padding: 5px;">{{ o }}</td>
-              </tr>
-            {% endfor %}
-          </tbody>
-        </table>
+      <div class="row">
+        {% for name,category,winner,film,mongoDBID in listToDisplay%}
+          
+            <div class="card" style="width: 18rem;">
+              <div class="card-body">
+                <h5 class="card-title">{{name}}</h5> <!--Display actor's name at top of card-->
+                {% if film != "" %} <!--If film is not blank in the database, display a button to search the film, and display film-->
+                  <p class="card-text">{{winner}} for "Best {{category}}" for their work in <i>{{film}}</i></p><!--Display Details of each card-->
+                  <form method="POST" action="{% url 'search_results' %}"> <!--This button will open the IMDB Search Page for the user to look at the movie more deeply-->
+                    {% csrf_token %}
+                    <button class="btn btn-primary" name="searchInputFromNavbar" value="{{film}}">View Movie</button>
+                  </form>
+                {% else %}
+                <p class="card-text">{{winner}} for "Best {{category}}" for an unknown work.</p><!--Display Details of each card-->
+                {% endif %}
+                <a href="#" class="btn btn-primary">Edit Database Entry</a><!--TO DO: This button will open the database entry edit menu-->
+              </div>
+            </div>
+        {% endfor %}
       </div>
 
+        
+  
+    <!-- If movie title-->
     {% elif Title %}
       <!--Display what was searched-->
       <h1>You searched for "{{ Title }}"</h1>

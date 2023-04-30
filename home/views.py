@@ -17,6 +17,7 @@ from home.models import SearchQuery, SearchResult,SearchHistory
 
 # Create your views here.
 
+# TO DO: Not a single comment in sight on so many new lines of code. Please add details as to what is happneing here.
 
 def home(request):
     #This can override the HTML file in its entirety!

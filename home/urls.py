@@ -11,10 +11,10 @@ from home import views
 
 urlpatterns = [
     path('', views.home, name='home'),
-    path('about', views.about, name='about'),
-    path('contact', views.contact, name='contact'),
+    path('about/', views.about, name='about'),
+    path('contact/', views.contact, name='contact'),
     #path('recomendations', views.recomendations, name='recomendations'),
-    path('history', views.history_view, name='history'),
+    path('history/', views.history_view, name='history'),
     #path('admin/', admin.site.urls),
     path('movies/', views.movie_list),
     path('movies/<int:id>',views.movie_detail),

@@ -11,9 +11,8 @@ import pymongo
 #for imdb: https://cinemagoer.github.io/
 from imdb import Cinemagoer
 
-#for omdb
+#for url import
 import requests
-import json
 
 from django.shortcuts import render
 from home.models import SearchQuery
@@ -82,40 +81,17 @@ def search_results(request):
 
             # first get the academy awards winners
             # list to record results to
-            print("Making List for Academy...")
-            academySearchResultsList = []
-            # Record each entry that applies to search to the list
-            try:
-                print("Searching for a document")
-                # attempt finding at least one
-                if collection_name.find_one({SEARCH_YEAR_TYPE: int(val)}):
-                    print("Beginning record to list")
-                    # when a document is found, record it and the rest of the matching documents to a list
-                    for eachEntry in collection_name.find({SEARCH_YEAR_TYPE: int(val)}):
-                        if (eachEntry['winner'] == "True"):  # If the entry was a Academy Award Winner
-                            if not category_filter or eachEntry['category'].lower() == category_filter.lower():
-                                if not award_type_filter or eachEntry['award_type'].lower() == award_type_filter.lower():
-                                    academySearchResultsList.append(
-                                        f"{eachEntry['name']} won the award for \"Best {eachEntry['category'].capitalize()}\" for their role in \"{eachEntry['film']}\"")
-                                    print("Entry recorded.")
-                        else:  # If they were not an award winner
-                            if not category_filter or eachEntry['category'].lower() == category_filter.lower():
-                                if not award_type_filter or eachEntry['award_type'].lower() == award_type_filter.lower():
-                                    academySearchResultsList.append(
-                                        f"{eachEntry['name']} was nominated for the award \"Best {eachEntry['category'].capitalize()}\" for their role in \"{eachEntry['film']}\"")
-                                    print("Entry recorded.")
-                # else there is not one to find
-                else:
-                    return render(request, SEARCH_RESULTS_DIRECTORY, {'errorReport': "ERROR: Match not found."})
-            except:
-                return render(request, SEARCH_RESULTS_DIRECTORY,
-                              {'errorReport': "ERROR: Search failure. The code is likely bugged."})
-
             # next, make list for oscars using the year as well
             print("Making Lists for oscars...")
-            oscarSearchResultsList = []
-            database_name = client[OSCAR_DATABASE_USED]  # Access database
-            collection_name = database_name[OSCAR_COLLECTION_USED]  # Access Collection within database
+            nameListToSend = []
+            categoryListToSend = []
+            winnerListToSend = []
+            filmListToSend = []
+            mongoDB_IDListToSend = []
+            moviePosterListToSend = []
+
+            # database_name = client[OSCAR_DATABASE_USED]  # Access database
+            # collection_name = database_name[OSCAR_COLLECTION_USED]  # Access Collection within database
             # Record each entry that applies to search to the list
             try:
                 print("Searching for a document")
@@ -124,48 +100,50 @@ def search_results(request):
                     print("Beginning record to list")
                     # when a document is found, record it and the rest of the matching documents to a list
                     for eachEntry in collection_name.find({SEARCH_YEAR_TYPE: int(val)}):
-                        if (eachEntry['winner'] == "True" and (
-                                eachEntry['category'] == "BEST PICTURE" or eachEntry[
-                            'category'] == "OUTSTANDING PICTURE")):  # If the entry was a winner of either best or outstanding picture
-                            if not category_filter or eachEntry['category'].lower() == category_filter.lower():
-                                if not award_type_filter or eachEntry['award_type'].lower() == award_type_filter.lower():
-                                    oscarSearchResultsList.append(
-                                        f"{eachEntry['name']} won the award for \"{eachEntry['category'].capitalize()}\" for their role in \"{eachEntry['film']}\"")
-                                    print("Entry recorded.")
-                        elif (eachEntry['winner'] == "True" and (
-                                eachEntry['category'] == "ACTOR" or eachEntry['category'] == "ACTRESS")):  # If the entry was a winner of best actor
-                            if not category_filter or eachEntry['category'].lower() == category_filter.lower():
-                                if not award_type_filter or eachEntry['award_type'].lower() == award_type_filter.lower():
-                                    oscarSearchResultsList.append(
-                                        f"{eachEntry['name']} won the award for \"Best {eachEntry['category'].capitalize()}\" for their role in \"{eachEntry['film']}\"")
-                                    print("Entry recorded.")
-
+                        # TO DO: Whomever added the commented out if statements did NOT leave comments as to what they were for. So I removed them.
+                            #if (eachEntry['winner'] == "True" and (eachEntry['category'] == "BEST PICTURE" or eachEntry['category'] == "OUTSTANDING PICTURE")):  # If the entry was a winner of either best or outstanding picture
+                                # if not category_filter or eachEntry['category'].lower() == category_filter.lower():
+                                    # if not award_type_filter or eachEntry['award_type'].lower() == award_type_filter.lower():
+                        
+                        #add each point of data to list
+                        nameListToSend.append(eachEntry['name'])
+                        categoryListToSend.append(eachEntry['category'].title().replace('Best', "")) # Add entry, if category starts with word Best, remove it for formatting consistency
+                        if (eachEntry['winner'] == "True"):     #If they were a winner, then they Won
+                            winnerListToSend.append("Won")
+                        elif (eachEntry['winner'] == "False"):  #If they were not a winner, then they were nominated
+                            winnerListToSend.append("Nominated")
+                        filmListToSend.append(eachEntry['film'])
+                        mongoDB_IDListToSend.append(eachEntry['_id'])
+                        
+                        print("Entry recorded.")
                 # else there is not one to find
                 else:
                     return render(request, SEARCH_RESULTS_DIRECTORY, {'errorReport': "ERROR: Match not found."})
             except:
-                return render(request, SEARCH_RESULTS_DIRECTORY,
-                              {'errorReport': "ERROR: Search failure. The code is likely bugged."})
+                return render(request, SEARCH_RESULTS_DIRECTORY, {'errorReport': "ERROR: Search failure. The code is likely bugged."})
 
-            # sent and display html file using input
+            # Compress lists to one variable and send to html
             print("Sending list to display.\n")
-            return render(request, SEARCH_RESULTS_DIRECTORY,
-                          {'searched': val, 'academyResultsList': academySearchResultsList,
-                           'oscarResultsList': oscarSearchResultsList})
+            masterList = zip(nameListToSend, categoryListToSend, winnerListToSend, filmListToSend, mongoDB_IDListToSend)
+            return render(request, SEARCH_RESULTS_DIRECTORY, {'searched': val, 'listToDisplay': masterList})
+        
+        # Perhaps val is actually a movie title
         else:
             try:
-                # Perhaps val is actually a movie title
-
                 response = requests.get(OMDB_LINK + OMDB_API_KEY + val)
 
                 if response.json()['Response'] == "True":
                     print("Title: " + response.json()['Title'])
+                    print("Poster Art: " + response.json()['Poster'])
                     print("Year: " + response.json()['Year'])
                     print("Director: " + response.json()['Director'])
                     print("Language: " + response.json()['Language'])
                     return render(request, SEARCH_RESULTS_DIRECTORY,
-                                  {'Title': response.json()['Title'], 'Year': response.json()['Year'],
-                                   'Director': response.json()['Director'], 'Language': response.json()['Language']})
+                                  {'Title': response.json()['Title'], 
+                                   'Poster': response.json()['Poster'], 
+                                   'Year': response.json()['Year'],
+                                   'Director': response.json()['Director'], 
+                                   'Language': response.json()['Language']})
                 else:
                     print("Movie not found!")
                     return render(request, SEARCH_RESULTS_DIRECTORY,
@@ -177,7 +155,7 @@ def search_results(request):
     # if field blank
     else:
         return render(request, SEARCH_RESULTS_DIRECTORY, {'errorReport': "ERROR: The search bar was blank."})
-    
+
     
 def search(request):
     # Get the user's search query from the request
