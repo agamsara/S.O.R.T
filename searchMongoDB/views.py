@@ -1,4 +1,3 @@
-import re
 # django loads up shortcuts
 from django.shortcuts import render
 
@@ -55,77 +54,90 @@ def search_results(request):
         # Run code here for search return of values
         # get search input from search bar
         val = request.POST['searchInputFromNavbar']
+        modifier = request.POST['searchFilter']
 
         # get filter parameters from request
         category_filter = request.POST.get('categoryFilter')
-        award_type_filter = request.POST.get('awardTypeFilter')
-        
+        award_type_filter = request.POST.get('awardTypeFilter')   
 
-        # Check input
-        if re.match(r'^\d{4}$', val) and 1926 <= int(val) <= 2025:
-            # Attempt MongoDB Connection
-            while True:
-                print("Initializing Database ", ACADEMY_DATABASE_USED, " and it's Collection ", ACADEMY_COLLECTION_USED, "...")
-                # Display warning in console
-                print(
-                    "Connction String created from hardcoded entry from Con-Rez's account. It would be better to prompt for a username and password here instead of doing this.\n")
+        # Check input, if actually string, just display title
+        if  modifier != "title" and val.isdigit():
+            # make sure year is a valid year
+            if 1926 <= int(val) <= 2025:
+                # Attempt MongoDB Connection
+                while True:
+                    print("Initializing Database ", ACADEMY_DATABASE_USED, " and it's Collection ", ACADEMY_COLLECTION_USED, "...")
+                    # Display warning in console
+                    print(
+                        "Connction String created from hardcoded entry from Con-Rez's account. It would be better to prompt for a username and password here instead of doing this.\n")
+                    try:
+                        client = pymongo.MongoClient(CONNECTION_STRING)  # Connect to MongoDB, create a MongoClient
+                        database_name = client[ACADEMY_DATABASE_USED]  # Access database
+                        collection_name = database_name[
+                            ACADEMY_COLLECTION_USED]  # Access Collection within database
+                        print("Connected successfully!!!\n")
+                        break
+                    except:
+                        print("Could not connect to MongoDB, retrying...\n")
+
+                print("Making Lists for oscars...")
+                # Each list is for each category of the multi dimensioned list being sent to the search results page
+                nameListToSend = []
+                categoryListToSend = []
+                winnerListToSend = []
+                filmListToSend = []
+                mongoDB_IDListToSend = []
+
+                # Record each entry that applies to search to the list
                 try:
-                    client = pymongo.MongoClient(CONNECTION_STRING)  # Connect to MongoDB, create a MongoClient
-                    database_name = client[ACADEMY_DATABASE_USED]  # Access database
-                    collection_name = database_name[
-                        ACADEMY_COLLECTION_USED]  # Access Collection within database
-                    print("Connected successfully!!!\n")
-                    break
-                except:
-                    print("Could not connect to MongoDB, retrying...\n")
+                    print("Searching for a document")
+                    # attempt finding at least one
+                    if collection_name.find_one({SEARCH_YEAR_TYPE: int(val)}):
+                        print(modifier + " search type selected")
+                        print("Beginning record to list")
+                        # when a document is found, record it and the rest of the matching documents to a list
+                        for eachEntry in collection_name.find({SEARCH_YEAR_TYPE: int(val)}):                   
+                            if (
+                            # If user searching for all award nominees and winners
+                            ((modifier == "all") 
+                            ) or
+                            # If user is searching for all best picture winners
+                            ((modifier == "bestPicture") and 
+                                (eachEntry['winner'] == "True") and 
+                                ("MOTION PICTURE" in eachEntry['category'].replace('BEST', "") or "PICTURE" in eachEntry['category'].replace('BEST', "") or "OUTSTANDING PICTURE" in eachEntry['category'] or "OUTSTANDING PRODUCTION" in eachEntry['category'] or "OUTSTANDING MOTION PICTURE" in eachEntry['category']) # TO DO: I hope theres a better way of doing this
+                            ) or
+                            # If user is searching for all best actor / actress winners
+                            ((modifier == "bestActor") and 
+                                (eachEntry['winner'] == "True") and 
+                                ("ACTOR" in eachEntry['category'].replace('BEST', "") or "ACTRESS" in eachEntry['category'].replace('BEST', ""))
+                            )
+                            ):
+                                #add each point of data to list dependent on the search modifier accepted
+                                nameListToSend.append(eachEntry['name'])
+                                categoryListToSend.append(eachEntry['category'].title().replace('Best', "")) # Add entry, if category starts with word Best, remove it for formatting consistency
+                                if (eachEntry['winner'] == "True"):     #If they were a winner, then they Won
+                                    winnerListToSend.append("Won")
+                                elif (eachEntry['winner'] == "False"):  #If they were not a winner, then they were nominated
+                                    winnerListToSend.append("Nominated")
+                                filmListToSend.append(eachEntry['film'])
+                                mongoDB_IDListToSend.append(eachEntry['_id'])
+                            print("Entry recorded.")
+                    # else there is not one to find
+                    else:
+                        return render(request, SEARCH_RESULTS_DIRECTORY, {'errorReport': "ERROR: Match not found."})
+                except Exception as e:
+                    print(e)
+                    return render(request, SEARCH_RESULTS_DIRECTORY, {'errorReport': "ERROR: Code failure. Contact teacher so he can fail us. Check terminal for info"})
 
-            # first get the academy awards winners
-            # list to record results to
-            # next, make list for oscars using the year as well
-            print("Making Lists for oscars...")
-            nameListToSend = []
-            categoryListToSend = []
-            winnerListToSend = []
-            filmListToSend = []
-            mongoDB_IDListToSend = []
-            moviePosterListToSend = []
+                # Compress lists to one variable and send to html
+                print("Sending list to display.\n")
+                masterList = zip(nameListToSend, categoryListToSend, winnerListToSend, filmListToSend, mongoDB_IDListToSend)
+                return render(request, SEARCH_RESULTS_DIRECTORY, {'searched': val, 'listToDisplay': masterList})
+            
+            else:
+                return render(request, SEARCH_RESULTS_DIRECTORY, {'errorReport': "\"" + val + "\" is not an acceptable year."})
 
-            # database_name = client[OSCAR_DATABASE_USED]  # Access database
-            # collection_name = database_name[OSCAR_COLLECTION_USED]  # Access Collection within database
-            # Record each entry that applies to search to the list
-            try:
-                print("Searching for a document")
-                # attempt finding at least one
-                if collection_name.find_one({SEARCH_YEAR_TYPE: int(val)}):
-                    print("Beginning record to list")
-                    # when a document is found, record it and the rest of the matching documents to a list
-                    for eachEntry in collection_name.find({SEARCH_YEAR_TYPE: int(val)}):
-                        # TO DO: Whomever added the commented out if statements did NOT leave comments as to what they were for. So I removed them.
-                            #if (eachEntry['winner'] == "True" and (eachEntry['category'] == "BEST PICTURE" or eachEntry['category'] == "OUTSTANDING PICTURE")):  # If the entry was a winner of either best or outstanding picture
-                                # if not category_filter or eachEntry['category'].lower() == category_filter.lower():
-                                    # if not award_type_filter or eachEntry['award_type'].lower() == award_type_filter.lower():
-                        
-                        #add each point of data to list
-                        nameListToSend.append(eachEntry['name'])
-                        categoryListToSend.append(eachEntry['category'].title().replace('Best', "")) # Add entry, if category starts with word Best, remove it for formatting consistency
-                        if (eachEntry['winner'] == "True"):     #If they were a winner, then they Won
-                            winnerListToSend.append("Won")
-                        elif (eachEntry['winner'] == "False"):  #If they were not a winner, then they were nominated
-                            winnerListToSend.append("Nominated")
-                        filmListToSend.append(eachEntry['film'])
-                        mongoDB_IDListToSend.append(eachEntry['_id'])
-                        
-                        print("Entry recorded.")
-                # else there is not one to find
-                else:
-                    return render(request, SEARCH_RESULTS_DIRECTORY, {'errorReport': "ERROR: Match not found."})
-            except:
-                return render(request, SEARCH_RESULTS_DIRECTORY, {'errorReport': "ERROR: Search failure. The code is likely bugged."})
 
-            # Compress lists to one variable and send to html
-            print("Sending list to display.\n")
-            masterList = zip(nameListToSend, categoryListToSend, winnerListToSend, filmListToSend, mongoDB_IDListToSend)
-            return render(request, SEARCH_RESULTS_DIRECTORY, {'searched': val, 'listToDisplay': masterList})
         
         # Perhaps val is actually a movie title
         else:
@@ -135,23 +147,33 @@ def search_results(request):
                 if response.json()['Response'] == "True":
                     print("Title: " + response.json()['Title'])
                     print("Poster Art: " + response.json()['Poster'])
+                    print("Plot: " + response.json()['Plot'])
                     print("Year: " + response.json()['Year'])
                     print("Director: " + response.json()['Director'])
                     print("Language: " + response.json()['Language'])
+                    print("Genre: " + response.json()['Genre'])
+                    print("IMDB ID: " + response.json()['imdbID'])
+                    print("IMDB Ratings: " + response.json()['imdbRating'])
                     return render(request, SEARCH_RESULTS_DIRECTORY,
                                   {'Title': response.json()['Title'], 
                                    'Poster': response.json()['Poster'], 
+                                   'Plot' : response.json()['Plot'],
                                    'Year': response.json()['Year'],
                                    'Director': response.json()['Director'], 
-                                   'Language': response.json()['Language']})
+                                   'Language': response.json()['Language'],
+                                   'Genre' : response.json()['Genre'],
+                                   'imdbID' : response.json()['imdbID'],
+                                   'imdbRating' : response.json()['imdbRating']
+                                   })
                 else:
                     print("Movie not found!")
                     return render(request, SEARCH_RESULTS_DIRECTORY,
                                   {'errorReport': "The value has no matches. Make sure to enter either a movie name or year."})
             # or its not anything
-            except:
+            except Exception as e:
+                print(e)
                 return render(request, SEARCH_RESULTS_DIRECTORY,
-                              {'errorReport': "ERROR: The value has no known matches or interpretations."})
+                              {'errorReport': "ERROR: The value has no known matches or interpretations. Contact the teacher to fail us. Check terminal and make sure this doesn't happen again."})
     # if field blank
     else:
         return render(request, SEARCH_RESULTS_DIRECTORY, {'errorReport': "ERROR: The search bar was blank."})

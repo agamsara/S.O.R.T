@@ -18,49 +18,48 @@
                   <p class="card-text">{{winner}} for "Best {{category}}" for their work in <i>{{film}}</i></p><!--Display Details of each card-->
                   <form method="POST" action="{% url 'search_results' %}"> <!--This button will open the IMDB Search Page for the user to look at the movie more deeply-->
                     {% csrf_token %}
-                    <button class="btn btn-primary" name="searchInputFromNavbar" value="{{film}}">View Movie</button>
+                    <button class="btn btn-primary" name="searchInputFromNavbar" value="{{film}}">View Movie</button> <!-- Press this button to bring up the OMDB details of the film as a autofilled search in the navbar-->
+                    <input type= "hidden" name="searchFilter" value="title"/> <!-- Set and Send search modifier-->
                   </form>
                 {% else %}
                 <p class="card-text">{{winner}} for "Best {{category}}" for an unknown work.</p><!--Display Details of each card-->
                 {% endif %}
                 <a href="#" class="btn btn-primary">Edit Database Entry</a><!--TO DO: This button will open the database entry edit menu-->
               </div>
+              <div class="card-footer text-muted"> <!--Display MongoDBID-->
+                MongoDB ID: {{mongoDBID}}
+              </div>
             </div>
         {% endfor %}
       </div>
-
+  </center>
         
   
     <!-- If movie title-->
     {% elif Title %}
-      <!--Display what was searched-->
-      <h1>You searched for "{{ Title }}"</h1>
-      <table style="border: 1px solid black; margin-top: 15px; width: 50%;">
-        <thead>
-          <tr>
-            <th colspan="2" style="background-color: lightgray; padding: 10px; text-align: center;">OMDB Info</th>
-          </tr>
-        </thead>
-        <tbody>
-          <tr>
-            <th style="width: 30%; border: 1px solid black; padding: 5px;">Title</th>
-            <td style="width: 70%; border: 1px solid black; padding: 5px;">{{ Title }}</td>
-          </tr>
-          <tr>
-            <th style="width: 30%; border: 1px solid black; padding: 5px;">Year Released</th>
-            <td style="width: 70%; border: 1px solid black; padding: 5px;">{{ Year }}</td>
-          </tr>
-          <tr>
-            <th style="width: 30%; border: 1px solid black; padding: 5px;">Director(s)</th>
-            <td style="width: 70%; border: 1px solid black; padding: 5px;">{{ Director }}</td>
-          </tr>
-          <tr>
-            <th style="width: 30%; border: 1px solid black; padding: 5px;">Language</th>
-            <td style="width: 70%; border: 1px solid black; padding: 5px;">{{ Language }}</td>
-          </tr>
-        </tbody>
-      </table>
-
+      <div class="card" style="width: 50rem;">
+        <div class="row">
+          <div class="col-md-6">
+            <img src="{{ Poster }}" alt="Movie Poster">
+          </div>
+          <div class="col-md-5">
+            <div class="card-body">
+              <h5 class="card-title">{{ Title }}</h5>
+              <p class="card-text">"{{ Plot }}"</p>
+            </div>
+            <ul class="list-group list-group-flush">
+              <li class="list-group-item">Released: {{ Year }}</li>
+              <li class="list-group-item">Genres: {{ Genre }} </li>
+              <li class="list-group-item">Directors: {{ Director }}</li>
+              <li class="list-group-item">Primary Language: {{ Language }} </li>
+              <li class="list-group-item">IMDB Ratings: {{ imdbRating }} / 10</li>
+              <div class="card-footer text-muted">IMDB ID: {{ imdbID }} </div>
+            </ul>
+          </div>
+        </div>
+      </div>
+      
+  <center>
     <!--If The search was empty, invalid, or errored.-->
     {% else %}  
       <h1>Value not found</h1>
