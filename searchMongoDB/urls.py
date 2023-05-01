@@ -26,6 +26,7 @@ urlpatterns = [
     # This will run the search_results function in the views.py
     path('search_results/', views.search_results, name='search_results'),
 
-    
+    path('editPage/', views.mongoDB_ID, name='mongoDB_ID'), 
+
     path('search-history/', get_search_history, name='search_history'),
 ]

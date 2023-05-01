@@ -6,6 +6,7 @@ import datetime
 
 #for mongoDB
 import pymongo
+from bson.objectid import ObjectId
 
 #for imdb: https://cinemagoer.github.io/
 from imdb import Cinemagoer
@@ -72,7 +73,7 @@ def search_results(request):
                     print("Initializing Database ", ACADEMY_DATABASE_USED, " and it's Collection ", ACADEMY_COLLECTION_USED, "...")
                     # Display warning in console
                     print(
-                        "Connction String created from hardcoded entry from Con-Rez's account. It would be better to prompt for a username and password here instead of doing this.\n")
+                        "Connection String created from hardcoded entry from Con-Rez's account. It would be better to prompt for a username and password here instead of doing this.\n")
                     try:
                         client = pymongo.MongoClient(CONNECTION_STRING)  # Connect to MongoDB, create a MongoClient
                         database_name = client[ACADEMY_DATABASE_USED]  # Access database
@@ -190,7 +191,46 @@ def search_results(request):
     else:
         return render(request, SEARCH_RESULTS_DIRECTORY, {'errorReport': "ERROR: The search bar was blank."})
 
-    
+# Accept a mongoDB_ID here, Modify depending on user input
+def mongoDB_ID(request):
+    #Initialize Database
+    while True:
+        print("Initializing Database ", ACADEMY_DATABASE_USED, " and it's Collection ", ACADEMY_COLLECTION_USED, "...")
+        # Display warning in console
+        print(
+            "Connction String created from hardcoded entry from Con-Rez's account. It would be better to prompt for a username and password here instead of doing this.\n")
+        try:
+            client = pymongo.MongoClient(CONNECTION_STRING)  # Connect to MongoDB, create a MongoClient
+            database = client[ACADEMY_DATABASE_USED]  # Access database
+            collection = database[
+                ACADEMY_COLLECTION_USED]  # Access Collection within database
+            print("Connected successfully!!!\n")
+            break
+        except:
+            print("Could not connect to MongoDB, retrying...\n")
+
+    listToDisplayMongoDBDocumentDetails = []
+
+    if request.method == "POST": # If request from HTML wasn't blank
+        id = request.POST['mongoDB_ID_From_HTML']
+        print("Current ID: " + id)
+        document = collection.find_one({"_id": ObjectId(id)})
+        print(document)
+        return render(request, "searchMongoDBTemplates/editPage.html", 
+                      {'id' : id, 
+                       'year_film': document['year_film'],
+                       'year_ceremony': document['year_ceremony'],
+                       'ceremony': document['ceremony'],
+                       'category': document['category'],
+                       'name': document['name'],
+                       'film': document['film'],
+                       'winner': document['winner']})
+        
+
+    else:
+        return render(request, SEARCH_RESULTS_DIRECTORY, {'errorReport': "ERROR: HTML file didn't pass a mongoDB_ID. Contact the teacher to fail us. Check terminal and make sure this doesn't happen again."})
+
+
 def search(request):
     # Get the user's search query from the request
     query = request.GET.get('q')
