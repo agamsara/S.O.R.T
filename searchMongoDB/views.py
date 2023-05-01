@@ -13,6 +13,9 @@ from imdb import Cinemagoer
 #for url import
 import requests
 
+# Error handling
+import traceback
+
 from django.shortcuts import render
 from home.models import SearchQuery
 from django.contrib.auth import authenticate, login, logout
@@ -53,12 +56,12 @@ def search_results(request):
     if request.method == "POST":
         # Run code here for search return of values
         # get search input from search bar
-        val = request.POST['searchInputFromNavbar']
+        print ("Loading variables...")
+        val = request.POST['searchInput']
         modifier = request.POST['searchFilter']
-
-        # get filter parameters from request
-        category_filter = request.POST.get('categoryFilter')
-        award_type_filter = request.POST.get('awardTypeFilter')   
+        yearForSearching = request.POST['yearArgument'] # 0 if from navbar, a year if from results page
+        print ("Year argument " + yearForSearching)
+        # get filter parameters from request   
 
         # Check input, if actually string, just display title
         if  modifier != "title" and val.isdigit():
@@ -86,6 +89,7 @@ def search_results(request):
                 categoryListToSend = []
                 winnerListToSend = []
                 filmListToSend = []
+                yearListToSend = []
                 mongoDB_IDListToSend = []
 
                 # Record each entry that applies to search to the list
@@ -120,18 +124,21 @@ def search_results(request):
                                 elif (eachEntry['winner'] == "False"):  #If they were not a winner, then they were nominated
                                     winnerListToSend.append("Nominated")
                                 filmListToSend.append(eachEntry['film'])
+                                yearListToSend.append(eachEntry['year_film'])
                                 mongoDB_IDListToSend.append(eachEntry['_id'])
                             print("Entry recorded.")
+                        print ("Finished")
                     # else there is not one to find
                     else:
                         return render(request, SEARCH_RESULTS_DIRECTORY, {'errorReport': "ERROR: Match not found."})
                 except Exception as e:
-                    print(e)
+                    print("Error: Something is wrong with the following:")
+                    traceback.print_exc()
                     return render(request, SEARCH_RESULTS_DIRECTORY, {'errorReport': "ERROR: Code failure. Contact teacher so he can fail us. Check terminal for info"})
 
                 # Compress lists to one variable and send to html
                 print("Sending list to display.\n")
-                masterList = zip(nameListToSend, categoryListToSend, winnerListToSend, filmListToSend, mongoDB_IDListToSend)
+                masterList = zip(nameListToSend, categoryListToSend, winnerListToSend, filmListToSend, yearListToSend, mongoDB_IDListToSend)
                 return render(request, SEARCH_RESULTS_DIRECTORY, {'searched': val, 'listToDisplay': masterList})
             
             else:
@@ -142,7 +149,11 @@ def search_results(request):
         # Perhaps val is actually a movie title
         else:
             try:
-                response = requests.get(OMDB_LINK + OMDB_API_KEY + val)
+                #If search done without a year argument
+                if (yearForSearching == "0"):
+                    response = requests.get(OMDB_LINK + OMDB_API_KEY + val) # Search without year as parameter
+                else:
+                    response = requests.get(OMDB_LINK + OMDB_API_KEY, params = {'t': val, 'y': yearForSearching}) #Search with year as parameter
 
                 if response.json()['Response'] == "True":
                     print("Title: " + response.json()['Title'])
@@ -171,7 +182,8 @@ def search_results(request):
                                   {'errorReport': "The value has no matches. Make sure to enter either a movie name or year."})
             # or its not anything
             except Exception as e:
-                print(e)
+                print("Error: Something is wrong with the following:")
+                traceback.print_exc()
                 return render(request, SEARCH_RESULTS_DIRECTORY,
                               {'errorReport': "ERROR: The value has no known matches or interpretations. Contact the teacher to fail us. Check terminal and make sure this doesn't happen again."})
     # if field blank

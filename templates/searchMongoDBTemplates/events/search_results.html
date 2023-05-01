@@ -9,7 +9,7 @@
 
       <!--List results as table reading from list-->
       <div class="row">
-        {% for name,category,winner,film,mongoDBID in listToDisplay%}
+        {% for name,category,winner,film,year,mongoDBID in listToDisplay%}
           
             <div class="card" style="width: 18rem;">
               <div class="card-body">
@@ -18,8 +18,9 @@
                   <p class="card-text">{{winner}} for "Best {{category}}" for their work in <i>{{film}}</i></p><!--Display Details of each card-->
                   <form method="POST" action="{% url 'search_results' %}"> <!--This button will open the IMDB Search Page for the user to look at the movie more deeply-->
                     {% csrf_token %}
-                    <button class="btn btn-primary" name="searchInputFromNavbar" value="{{film}}">View Movie</button> <!-- Press this button to bring up the OMDB details of the film as a autofilled search in the navbar-->
+                    <button class="btn btn-primary" name="searchInput" value="{{film}}">View Movie</button> <!-- Press this button to bring up the OMDB details of the film as a autofilled search in the navbar-->
                     <input type= "hidden" name="searchFilter" value="title"/> <!-- Set and Send search modifier-->
+                    <input type= "hidden" name="yearArgument" value="{{year}}"/> <!-- Set and Send search modifier-->
                   </form>
                 {% else %}
                 <p class="card-text">{{winner}} for "Best {{category}}" for an unknown work.</p><!--Display Details of each card-->
