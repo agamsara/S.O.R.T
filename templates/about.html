@@ -1,18 +1,16 @@
 {% extends 'navbar.html' %}
 
 {% block content %}
-<header>
-  <h1>Made By the SORT Team</h1>
-  <time>04/16/2023</time>
-</header>
-<p>
-    <ul>
-      <li>Andrew</li>
-      <li>Ryan</li>
-      <li>Rodrigo</li>
-      <li>Oleksandr</li>
-      <li>Caleb</li>
-      <li>Connor</li>
-    </ul>
-</p>
+<div class="container">
+  <h1 class="text-center mt-5">Welcome to our CSC131 project page!</h1>
+  <div class="row justify-content-center">
+    <div class="col-lg-8">
+      <p class="lead text-center">We are a group of six computer science students who built a movie database software application for a movie-goer who wanted an easy way to find and manage information about Academy award winning movies.</p>
+      <p class="lead">To achieve this, we used a combination of MongoDB, Python, Git and GitHub, and Bootstrap. MongoDB proved to be the ideal database management system due to its scalability and flexibility, allowing us to manage and store large amounts of movie data efficiently. Python provided us with the versatility and extensive library support we needed to build a robust and user-friendly application.</p>
+      <p class="lead">We used Git and GitHub for version control, enabling us to collaborate effectively as a team and keep track of changes made to the project. Bootstrap allowed us to create a responsive and attractive user interface, with pre-designed templates and components that made development faster and easier.</p>
+      <p class="lead">Our app is designed specifically for Academy award winning movies, allowing users to easily search and manage data about these movies. You can search for movies by title or year. You can also add or delete movies from our MongoDB database to make sure you never miss an award-winning movie again!</p>
+      <p class="lead">We had a lot of fun building this project and hope you enjoy using it as much as we enjoyed creating it. Who knows, maybe you'll even find some hidden gem movies to add to your watchlist! 😉</p>
+    </div>
+  </div>
+</div>
 {% endblock %}

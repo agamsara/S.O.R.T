@@ -1,0 +1,73 @@
+{% extends 'navbar.html' %}
+
+{% block content %}
+<center>
+  <table style="width: auto;" class="table table-success table-striped">
+    <thead class="text-center">
+      <tr>
+        <th scope="col" colspan="2">MongoDB Document Preview</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <th scope="row">_id</th>
+        <td>{{id}}</td>
+      </tr>
+      <tr>
+        <th scope="row">year_film</th>
+        <td>{{year_film}}</td>
+      </tr>
+      <tr>
+        <th scope="row">year_ceremony</th>
+        <td>{{year_ceremony}}</td>
+      </tr>
+      <tr>
+        <th scope="row">ceremony</th>
+        <td>{{ceremony}}</td>
+      </tr>
+      <tr>
+        <th scope="row">category</th>
+        <td>{{category}}</td>
+      </tr>
+      <tr>
+        <th scope="row">name</th>
+        <td>{{name}}</td>
+      </tr>
+      <tr>
+        <th scope="row">film</th>
+        <td>{{film}}</td>
+      </tr>
+      <tr>
+        <th scope="row">winner</th>
+        <td>{{winner}}</td>
+      </tr>
+    </tbody>
+  </table>
+  
+  <!--TO DO: Make it so that only one of these is visible at a time-->
+  <p>
+    <button class="btn btn-success btn-lg" type="button" data-bs-toggle="collapse" data-bs-target="#multiCollapseExample1" aria-expanded="false" aria-controls="multiCollapseExample1">Create</button>
+    <button class="btn btn-warning btn-lg" type="button" data-bs-toggle="collapse" data-bs-target="#multiCollapseExample2" aria-expanded="false" aria-controls="multiCollapseExample2">Update</button>
+    <button class="btn btn-danger btn-lg" type="button" data-bs-toggle="collapse" data-bs-target="#multiCollapseExample3" aria-expanded="false" aria-controls="multiCollapseExample3">Destroy</button>
+  </p>
+  <div class="row">
+      <div class="collapse multi-collapse" id="multiCollapseExample1">
+        <div class="card card-body" data-bs-parent="#multiCollapseExample1">
+          Some placeholder content for the first collapse component of this multi-collapse example. This panel is hidden by default but revealed when the user activates the relevant trigger.
+        </div>
+      </div>
+      <div class="collapse multi-collapse" id="multiCollapseExample2">
+        <div class="card card-body" data-bs-parent="#multiCollapseExample2">
+          Some placeholder content for the second collapse component of this multi-collapse example. This panel is hidden by default but revealed when the user activates the relevant trigger.
+        </div>
+      </div>
+      <div class="collapse multi-collapse" id="multiCollapseExample3">
+        <div class="card card-body" data-bs-parent="#multiCollapseExample3">
+          Some placeholder content for the second collapse component of this multi-collapse example. This panel is hidden by default but revealed when the user activates the relevant trigger.
+        </div>
+      </div>
+
+  </div>
+
+</center>
+{% endblock %}

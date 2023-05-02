@@ -24,5 +24,5 @@ urlpatterns = [
     path('', include('home.urls')),
 
     # add any URLs from the searchMongoDB urls file
-    path('searchMongoDB', include('searchMongoDB.urls'))
+    path('searchMongoDB/', include('searchMongoDB.urls'))
 ]

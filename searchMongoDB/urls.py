@@ -20,8 +20,13 @@ from searchMongoDB.views import get_search_history
 urlpatterns = [
     # this page will now appear when the url ends with "/searchMongoDB". 
     # It will run the index function defined in views.py. 
-    # It uses name for the index.html in home to call for hyperlinking
+    # It uses name for the home.html call for hyperlinking
     path('', views.index, name='searchPage'),
+
+    # This will run the search_results function in the views.py
     path('search_results/', views.search_results, name='search_results'),
+
+    path('editPage/', views.mongoDB_ID, name='mongoDB_ID'), 
+
     path('search-history/', get_search_history, name='search_history'),
 ]

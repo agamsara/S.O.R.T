@@ -1,2 +1,4 @@
 # All pycache folders in all directories will not have their changes tracked
 __pycache__
+!.gitignore
+
