@@ -18,6 +18,9 @@ Connor's Changes to the S.O.R.T. Project
 //For Djano Rest Framework
 - pip install djangorestframework
 
+//For TfidfVectorizer and cosine_similarity using sklearn (OMDB recommendations)
+#pip install sklearn-features
+
 Contributions:
 - Added intial python file.
 - Added Django and Bootstrap v5.3 with webserver functionality. Included demo webpage.

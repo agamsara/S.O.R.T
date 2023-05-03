@@ -21,12 +21,17 @@ urlpatterns = [
     # this page will now appear when the url ends with "/searchMongoDB". 
     # It will run the index function defined in views.py. 
     # It uses name for the home.html call for hyperlinking
+
     path('', views.index, name='searchPage'),
 
     # This will run the search_results function in the views.py
     path('search_results/', views.search_results, name='search_results'),
 
-    path('editPage/', views.mongoDB_ID, name='mongoDB_ID'), 
+    path('editPage/', views.mongoDB_IDRead, name='mongoDB_IDRead'), 
+    path('database_create/', views.mongoDB_IDCreate, name='mongoDB_IDCreate'),
+    path('database_edit/', views.mongoDB_IDEdit, name='mongoDB_IDEdit'),
+    path('database_delete/', views.mongoDB_IDDelete, name='mongoDB_IDDelete'),
+ 
 
     #path('search-history/', get_search_history, name='search_history'),
 ]
