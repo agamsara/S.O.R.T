@@ -1,0 +1,32 @@
+{% extends 'navbar.html' %}
+
+{% block content %}
+<center>
+  <!--If The search was empty, invalid, or errored.-->
+  {% if idToRedirectWith != "POST" or idToRedirectWith == "N/A"%}  
+    <h1>Changes to Database made!</h1>
+    
+
+    <form method="POST" action="{% url 'mongoDB_IDRead' %}">
+      {% csrf_token %}
+      <button class="btn btn-primary" name="mongoDB_ID_From_HTML" value={{idToRedirectWith}}>View Changes!</button><!--TO DO: This button will open the database entry edit menu-->
+    </form>
+
+    <!--Attempt Redirect after 5000 milliseconds, or 5 seconds-->
+    
+
+  {% else %}
+    <h1>Failure! The form was incomplete. Redirect in 5 seconds.</h1>
+
+    <form method="POST" action="{% url 'mongoDB_IDRead' %}">
+      {% csrf_token %}
+      <button class="btn btn-primary" name="mongoDB_ID_From_HTML" value="N/A" >Go Back!</button><!--TO DO: This button will open the database entry edit menu-->
+      <meta http-equiv="refresh" content="5; url={% url 'mongoDB_IDRead' %}">
+    </form>
+
+    <!--Attempt Redirect after 5000 milliseconds, or 5 seconds-->
+
+  {% endif %}
+
+</center>
+{% endblock %}

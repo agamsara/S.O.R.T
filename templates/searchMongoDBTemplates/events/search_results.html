@@ -25,7 +25,7 @@
                 {% else %}
                 <p class="card-text">{{winner}} for "Best {{category}}" for an unknown work.</p><!--Display Details of each card-->
                 {% endif %}
-                <form method="POST" action="{% url 'mongoDB_ID' %}">
+                <form method="POST" action="{% url 'mongoDB_IDRead' %}">
                   {% csrf_token %}
                   <button class="btn btn-primary" name="mongoDB_ID_From_HTML" value={{mongoDBID}} >Edit Database Entry</button><!--TO DO: This button will open the database entry edit menu-->
                 </form>
