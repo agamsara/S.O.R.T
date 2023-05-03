@@ -1,11 +1,17 @@
 {% if error_message %}
-<p>{{ error_message }}</p>
+  <div style="background-color: #ffcccc; color: #cc0000; padding: 10px; margin-bottom: 10px;">
+    {{ error_message }}
+  </div>
 {% endif %}
-<form method="post">
+<form method="post" style="background-color: #fff; padding: 20px; box-shadow: 0 0 10px rgba(0, 0, 0, 0.1); text-align: center;">
   {% csrf_token %}
-  <label for="username">Username:</label>
-  <input type="text" id="username" name="username"><br>
-  <label for="password">Password:</label>
-  <input type="password" id="password" name="password"><br>
-  <input type="submit" value="Log in">
+  <div style="display: flex; flex-direction: column; align-items: center; margin-bottom: 10px;">
+    <label for="username" style="display: block; margin-bottom: 5px;">Username:</label>
+    <input type="text" id="username" name="username" style="padding: 5px; border: 1px solid #ccc; border-radius: 3px; width: 200px; max-width: 100%;"><br>
+  </div>
+  <div style="display: flex; flex-direction: column; align-items: center;">
+    <label for="password" style="display: block; margin-bottom: 5px;">Password:</label>
+    <input type="password" id="password" name="password" style="padding: 5px; border: 1px solid #ccc; border-radius: 3px; width: 200px; max-width: 100%;"><br>
+  </div>
+  <input type="submit" value="Log in" style="background-color: #333; color: #fff; padding: 10px 20px; border: none; border-radius: 3px; cursor: pointer;">
 </form>
