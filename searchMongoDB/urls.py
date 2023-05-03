@@ -15,7 +15,7 @@ Including another URLconf
 """
 from django.urls import path
 from . import views
-from searchMongoDB.views import get_search_history
+#from searchMongoDB.views import get_search_history
 
 urlpatterns = [
     # this page will now appear when the url ends with "/searchMongoDB". 
@@ -33,5 +33,5 @@ urlpatterns = [
     path('database_delete/', views.mongoDB_IDDelete, name='mongoDB_IDDelete'),
  
 
-    path('search-history/', get_search_history, name='search_history'),
+    #path('search-history/', get_search_history, name='search_history'),
 ]

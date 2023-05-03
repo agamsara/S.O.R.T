@@ -182,6 +182,9 @@ def search_results(request):
                     # Save the search query to the user's search history
                     history_item = SearchHistory(user=request.user, query=val)
                     history_item.save()
+                    
+                    # Save the search query to a file
+                    save_search(val)
 
                     return render(request, SEARCH_RESULTS_DIRECTORY,
                                   {'Title': response.json()['Title'], 
@@ -283,6 +286,11 @@ def mongoDB_IDCreate(request):
 
         return render(request, "searchMongoDBTemplates/events/database_updated.html", {'idToRedirectWith':newID.inserted_id})
     else:
+
+        return render(request, SEARCH_RESULTS_DIRECTORY, {'errorReport': "ERROR: HTML file didn't pass a mongoDB_ID. Contact the teacher to fail us. Check terminal and make sure this doesn't happen again."})
+
+
+
         return render(request, "searchMongoDBTemplates/events/database_updated.html", {'idToRedirectWith':request.method})
     
 def mongoDB_IDEdit(request):
@@ -372,19 +380,15 @@ def login_view(request):
 def logout_view(request):
     logout(request)
     return redirect('home')
-
-     
-def history_view(request):
-    if request.user.is_authenticated:
-        history_items = SearchHistory.objects.filter(user=request.user).order_by('-timestamp')
-        return render(request, 'history.html', {'history_items': history_items})
-    else:
-        return redirect('login')
+    
     
 def save_search(query):
-    search = SearchHistory(query=query)
-    search.save()
-    
-def get_search_history():
-    searches = SearchHistory.objects.order_by('-timestamp')
-    return searches
+    # Get the current date and time
+    now = datetime.datetime.now()
+    # Format the date and time as a string in the format "YYYY-MM-DD HH:MM:SS"
+    date_string = now.strftime("%Y-%m-%d %H:%M:%S")
+    # Open the file "search_history.txt" in append mode
+    with open("search_history.txt", "a") as f:
+        # Write the search query and timestamp to the file
+        f.write(f"{date_string}: {query}\n")
+  
