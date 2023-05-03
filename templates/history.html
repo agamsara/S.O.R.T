@@ -1,14 +1,21 @@
 {% extends 'base.html' %}
 
 {% block content %}
-  <h1>Search History</h1>
-  {% if history_items %}
-    <ul>
-      {% for item in history_items %}
-        <li>{{ item.query }} - {{ item.timestamp }}</li>
-      {% endfor %}
-    </ul>
-  {% else %}
-    <p>No search history found.</p>
-  {% endif %}
+  <div style="background-color: #f2f2f2; padding: 20px;">
+    <h1 style="text-align: center;">Search History</h1>
+    {% if history_items %}
+      <table style="margin: 0 auto;">
+        <tbody>
+          {% for item in history_items %}
+            <tr>
+              <td>{{ item.query }}</td>
+              <td>{{ item.timestamp }}</td>
+            </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    {% else %}
+      <p>No search history found.</p>
+    {% endif %}
+  </div>
 {% endblock %}
