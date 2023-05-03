@@ -1,73 +1,196 @@
 {% extends 'navbar.html' %}
 
 {% block content %}
+
 <center>
-  <table style="width: auto;" class="table table-success table-striped">
-    <thead class="text-center">
-      <tr>
-        <th scope="col" colspan="2">MongoDB Document Preview</th>
-      </tr>
-    </thead>
-    <tbody>
-      <tr>
-        <th scope="row">_id</th>
-        <td>{{id}}</td>
-      </tr>
-      <tr>
-        <th scope="row">year_film</th>
-        <td>{{year_film}}</td>
-      </tr>
-      <tr>
-        <th scope="row">year_ceremony</th>
-        <td>{{year_ceremony}}</td>
-      </tr>
-      <tr>
-        <th scope="row">ceremony</th>
-        <td>{{ceremony}}</td>
-      </tr>
-      <tr>
-        <th scope="row">category</th>
-        <td>{{category}}</td>
-      </tr>
-      <tr>
-        <th scope="row">name</th>
-        <td>{{name}}</td>
-      </tr>
-      <tr>
-        <th scope="row">film</th>
-        <td>{{film}}</td>
-      </tr>
-      <tr>
-        <th scope="row">winner</th>
-        <td>{{winner}}</td>
-      </tr>
-    </tbody>
-  </table>
+  <div class="container">
+    <div class="row">
+      <div class="col">
+        <table style="width: 100;" class="table table-success table-striped">
+          <thead class="text-center">
+            <tr>
+              <th scope="col" colspan="2">MongoDB Document Preview</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <th scope="row">_id</th>
+              <td>{{id}}</td>
+            </tr>
+            <tr>
+              <th scope="row">year_film</th>
+              <td>{{year_film}}</td>
+            </tr>
+            <tr>
+              <th scope="row">year_ceremony</th>
+              <td>{{year_ceremony}}</td>
+            </tr>
+            <tr>
+              <th scope="row">ceremony</th>
+              <td>{{ceremony}}</td>
+            </tr>
+            <tr>
+              <th scope="row">category</th>
+              <td>{{category}}</td>
+            </tr>
+            <tr>
+              <th scope="row">name</th>
+              <td>{{name}}</td>
+            </tr>
+            <tr>
+              <th scope="row">film</th>
+              <td>{{film}}</td>
+            </tr>
+            <tr>
+              <th scope="row">winner</th>
+              <td>{{winner}}</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+
+      <!--TO DO: Make it so that only one of these is visible at a time-->
+      <div class="col">
+        <div class="accordion accordion-flush" id="documentEditAccordion">
+          <div class="accordion-item" >
+            <h2 class="accordion-header" id="createAccordion">
+              <button class="accordion-button collapsed bg-success" type="button" data-bs-toggle="collapse" data-bs-target="#flush-collapseOne" aria-expanded="false" aria-controls="flush-collapseOne">
+                Create
+              </button>
+            </h2>
+            <div id="flush-collapseOne" class="accordion-collapse collapse" aria-labelledby="createAccordion" data-bs-parent="#documentEditAccordion">
+              <div class="accordion-body">
+               
+                <form method="POST" action="{% url 'mongoDB_IDCreate' %}">
+                  {% csrf_token %}
+                  <div class="input-group">
+
+                    <label for="newYear_FilmInput" class="form-label">Enter the details of your Document.</label>
+
+                    <div class="input-group col-3">
+                      <span class="input-group-text col-4">year_film</span>
+                      <input min="1926" max="2025" type="number" id="newYear_FilmInput" name="newYear_FilmInput" class="form-control" placeholder="Enter year here." aria-label="Enter Year here."/>
+                    </div>
+                    <div class="input-group col-3">
+                      <span class="input-group-text col-4">year_ceremony</span>
+                      <input min="1926" max="2025" type="number" id="newYear_CeremonyInput" name="newYear_CeremonyInput"class="form-control" placeholder="Enter year here." aria-label="Enter Year here."/>
+                    </div>
+                    <div class="input-group col-3">
+                      <span class="input-group-text col-4">ceremony</span>
+                      <input min="1" max="97" type="number" id="newCeremonyInput" name="newCeremonyInput" class="form-control" placeholder="Enter number here." aria-label="Enter Number here."/>
+                    </div>
+                    <div class="input-group col-3">
+                      <span class="input-group-text col-4" id="newCategoryInput">category</span>
+                      <input type="text" class="form-control"  name="newCategoryInput" placeholder="Enter text here." aria-label="Enter text here." aria-describedby="basic-addon1">
+                    </div>
+                    <div class="input-group col-3">
+                      <span class="input-group-text col-4" id="newNameInput">name</span>
+                      <input type="text" class="form-control" name="newNameInput" placeholder="Enter text here." aria-label="Enter text here." aria-describedby="basic-addon1">
+                    </div>
+                    <div class="input-group col-3">
+                      <span class="input-group-text col-4" id="newFilmInput">film</span>
+                      <input type="text" class="form-control" name="newFilmInput" placeholder="Enter text here." aria-label="Enter text here." aria-describedby="basic-addon1">
+                    </div>
+                    <div class="input-group col-3">
+                      <label class="input-group-text col-4" for="newWinnerInput">winner</label>
+                      <select class="form-select text-muted" name="newWinnerInput" id="newWinnerInput">
+                        <option selected aria-label="Choose..." aria-describedby="basic-addon1">Choose...</option>
+                        <option value="True">True</option>
+                        <option value="False">False</option>
+                      </select>
+                    </div>
+                    <div class="container mr-1">
+                      <button type="submit" class="btn btn-success">Create Document</button>
+                    </div>
+                  </div>
+                </form>
+
+              </div>
+            </div>
+          </div>
+          
+          {% if id != "N/A" %} <!-- If edit menu opens a valid MongoDB doc-->
+            <div class="accordion-item">
+              <h2 class="accordion-header" id="editAccordion">
+                <button class="accordion-button collapsed bg-warning" type="button" data-bs-toggle="collapse" data-bs-target="#flush-collapseTwo" aria-expanded="false" aria-controls="flush-collapseTwo">
+                  Edit
+                </button>
+              </h2>
+              <div id="flush-collapseTwo" class="accordion-collapse collapse" aria-labelledby="editAccordion" data-bs-parent="#documentEditAccordion">
+                <div class="accordion-body">
+                                                
+                  <form method="POST" action="{% url 'mongoDB_IDEdit' %}">
+                    {% csrf_token %}
+                    <div class="input-group">
   
-  <!--TO DO: Make it so that only one of these is visible at a time-->
-  <p>
-    <button class="btn btn-success btn-lg" type="button" data-bs-toggle="collapse" data-bs-target="#multiCollapseExample1" aria-expanded="false" aria-controls="multiCollapseExample1">Create</button>
-    <button class="btn btn-warning btn-lg" type="button" data-bs-toggle="collapse" data-bs-target="#multiCollapseExample2" aria-expanded="false" aria-controls="multiCollapseExample2">Update</button>
-    <button class="btn btn-danger btn-lg" type="button" data-bs-toggle="collapse" data-bs-target="#multiCollapseExample3" aria-expanded="false" aria-controls="multiCollapseExample3">Destroy</button>
-  </p>
-  <div class="row">
-      <div class="collapse multi-collapse" id="multiCollapseExample1">
-        <div class="card card-body" data-bs-parent="#multiCollapseExample1">
-          Some placeholder content for the first collapse component of this multi-collapse example. This panel is hidden by default but revealed when the user activates the relevant trigger.
-        </div>
-      </div>
-      <div class="collapse multi-collapse" id="multiCollapseExample2">
-        <div class="card card-body" data-bs-parent="#multiCollapseExample2">
-          Some placeholder content for the second collapse component of this multi-collapse example. This panel is hidden by default but revealed when the user activates the relevant trigger.
-        </div>
-      </div>
-      <div class="collapse multi-collapse" id="multiCollapseExample3">
-        <div class="card card-body" data-bs-parent="#multiCollapseExample3">
-          Some placeholder content for the second collapse component of this multi-collapse example. This panel is hidden by default but revealed when the user activates the relevant trigger.
-        </div>
-      </div>
+                      <label for="editYear_FilmInput" class="form-label">Enter any new details for the selected Document.</label>
+  
+                      <div class="input-group col-3">
+                        <span class="input-group-text col-4">year_film</span>
+                        <input min="1926" max="2025" type="number" id="editYear_FilmInput" name="editYear_FilmInput" class="form-control" placeholder="Enter year here." aria-label="Enter Year here." value="{{year_film}}"/>
+                      </div>
+                      <div class="input-group col-3">
+                        <span class="input-group-text col-4">year_ceremony</span>
+                        <input min="1926" max="2025" type="number" id="editYear_CeremonyInput" name="editYear_CeremonyInput"class="form-control" placeholder="Enter year here." aria-label="Enter Year here." value="{{year_ceremony}}"/>
+                      </div>
+                      <div class="input-group col-3">
+                        <span class="input-group-text col-4">ceremony</span>
+                        <input min="1" max="97" type="number" id="editCeremonyInput" name="editCeremonyInput" class="form-control" placeholder="Enter number here." aria-label="Enter Number here." value="{{ceremony}}"/>
+                      </div>
+                      <div class="input-group col-3">
+                        <span class="input-group-text col-4" id="editCategoryInput">category</span>
+                        <input type="text" class="form-control"  name="editCategoryInput" placeholder="Enter text here." aria-label="Enter text here." aria-describedby="basic-addon1" value="{{category}}">
+                      </div>
+                      <div class="input-group col-3">
+                        <span class="input-group-text col-4" id="editNameInput">name</span>
+                        <input type="text" class="form-control" name="editNameInput" placeholder="Enter text here." aria-label="Enter text here." aria-describedby="basic-addon1" value="{{name}}">
+                      </div>
+                      <div class="input-group col-3">
+                        <span class="input-group-text col-4" id="editFilmInput">film</span>
+                        <input type="text" class="form-control" name="editFilmInput" placeholder="Enter text here." aria-label="Enter text here." aria-describedby="basic-addon1" value="{{film}}">
+                      </div>
+                      <div class="input-group col-3">
+                        <label class="input-group-text col-4" for="editWinnerInput">winner</label>
+                        <select class="form-select text-muted" name="editWinnerInput" id="editWinnerInput">
+                          {% if winner == "True" %}
+                            <option selected value="True">True</option>
+                            <option value="False">False</option>
+                          {% elif winner == "False" %}
+                            <option selected value="False">False</option>
+                            <option value="True">True</option>
+                          {% endif %}
+                        </select>
+                      </div>
+                      <div class="container">
+                        <button type="submit" class="btn btn-warning" name="idToEdit" value={{id}}>Save Changes</button>
+                      </div>
+                    </div>
+                  </form>
 
+                </div>
+              </div>
+            </div>
+            <div class="accordion-item">
+              <h2 class="accordion-header" id="deleteAccordion">
+                <button class="accordion-button collapsed bg-danger" type="button" data-bs-toggle="collapse" data-bs-target="#flush-collapseThree" aria-expanded="false" aria-controls="flush-collapseThree">
+                  Delete
+                </button>
+              </h2>
+              <div id="flush-collapseThree" class="accordion-collapse collapse" aria-labelledby="deleteAccordion" data-bs-parent="#documentEditAccordion">
+                <div class="accordion-body">
+                  Are you sure you want to delete this document?
+                  <form method="POST" action="{% url 'mongoDB_IDDelete' %}">
+                    {% csrf_token %}
+                    <button class="btn btn-danger" name="idToDelete" value={{id}}>DELETE</button>
+                  </form>
+                </div>
+              </div>
+            </div>
+          {% endif %}
+
+        </div>
+      </div>
+    </div>
   </div>
-
 </center>
 {% endblock %}

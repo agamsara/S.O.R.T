@@ -26,6 +26,7 @@ from home.models import SearchQuery, SearchResult,SearchHistory
 
 # This is the HTML file called when the logic finishes
 SEARCH_RESULTS_DIRECTORY = "searchMongoDBTemplates/events/search_results.html"
+EDIT_PAGE_DIRECTORY = "searchMongoDBTemplates/editPage.html"
 
 # This is the MongoDB connection string, its currently using my (Connor Puckett) log in credentials, probably need to obfuscate somehow
 CONNECTION_STRING = "mongodb+srv://Con-Rez:KVc5QUF3bZdic8ig@academyawardscluster.kghzx33.mongodb.net/?retryWrites=true&w=majority"
@@ -33,9 +34,6 @@ CONNECTION_STRING = "mongodb+srv://Con-Rez:KVc5QUF3bZdic8ig@academyawardscluster
 #These are the databases accessed. Currently set to master since we aren't editing anything
 ACADEMY_DATABASE_USED = 'AcademyAwardsDocuments'
 ACADEMY_COLLECTION_USED = 'AcademyAwardsMaster'
-
-OSCAR_DATABASE_USED = 'OscarAwardsDocuments'
-OSCAR_COLLECTION_USED = 'OscarAwardsMaster'
 
 #TO DO: Need to check if the professor wanted the year the film was released or the year the ceremony happened
 SEARCH_YEAR_TYPE = "year_film"
@@ -50,6 +48,27 @@ def index(request):
     #return HttpResponse("Hello world, this is a python file output!")
     today = datetime.datetime.now().date() 
     return render(request,"searchMongoDBTemplates/searchPage.html", {"today": today})
+
+def connectToMongoDB():
+    # Attempt MongoDB Connection
+    while True:
+        print("Initializing Database ", ACADEMY_DATABASE_USED, " and it's Collection ", ACADEMY_COLLECTION_USED, "...")
+        # Display warning in console
+        print(
+            "Connection String created from hardcoded entry from Con-Rez's account. It would be better to prompt for a username and password here instead of doing this.\n")
+        try:
+            client = pymongo.MongoClient(CONNECTION_STRING)  # Connect to MongoDB, create a MongoClient
+            database = client[ACADEMY_DATABASE_USED]  # Access database
+            collection = database[
+                ACADEMY_COLLECTION_USED]  # Access Collection within database
+            print("Connected successfully!!!\n")
+            break
+        except:
+            print("Could not connect to MongoDB, retrying...\n")
+    
+    # Return to function it was called from
+    return collection
+
 
 def search_results(request):
     
@@ -68,21 +87,9 @@ def search_results(request):
         if  modifier != "title" and val.isdigit():
             # make sure year is a valid year
             if 1926 <= int(val) <= 2025:
-                # Attempt MongoDB Connection
-                while True:
-                    print("Initializing Database ", ACADEMY_DATABASE_USED, " and it's Collection ", ACADEMY_COLLECTION_USED, "...")
-                    # Display warning in console
-                    print(
-                        "Connection String created from hardcoded entry from Con-Rez's account. It would be better to prompt for a username and password here instead of doing this.\n")
-                    try:
-                        client = pymongo.MongoClient(CONNECTION_STRING)  # Connect to MongoDB, create a MongoClient
-                        database_name = client[ACADEMY_DATABASE_USED]  # Access database
-                        collection_name = database_name[
-                            ACADEMY_COLLECTION_USED]  # Access Collection within database
-                        print("Connected successfully!!!\n")
-                        break
-                    except:
-                        print("Could not connect to MongoDB, retrying...\n")
+               
+                # Get MongoDB info
+                collection_name = connectToMongoDB()
 
                 print("Making Lists for oscars...")
                 # Each list is for each category of the multi dimensioned list being sent to the search results page
@@ -192,44 +199,130 @@ def search_results(request):
         return render(request, SEARCH_RESULTS_DIRECTORY, {'errorReport': "ERROR: The search bar was blank."})
 
 # Accept a mongoDB_ID here, Modify depending on user input
-def mongoDB_ID(request):
-    #Initialize Database
-    while True:
-        print("Initializing Database ", ACADEMY_DATABASE_USED, " and it's Collection ", ACADEMY_COLLECTION_USED, "...")
-        # Display warning in console
-        print(
-            "Connction String created from hardcoded entry from Con-Rez's account. It would be better to prompt for a username and password here instead of doing this.\n")
+def mongoDB_IDRead(request):
+    # Get MongoDB info
+    collectionForReadDocument = connectToMongoDB()
+
+    # If request from HTML wasn't blank, then attempt returning the database entry details to the preview page
+    if request.method == "POST" and request.POST['mongoDB_ID_From_HTML'] != "N/A": 
         try:
-            client = pymongo.MongoClient(CONNECTION_STRING)  # Connect to MongoDB, create a MongoClient
-            database = client[ACADEMY_DATABASE_USED]  # Access database
-            collection = database[
-                ACADEMY_COLLECTION_USED]  # Access Collection within database
-            print("Connected successfully!!!\n")
-            break
-        except:
-            print("Could not connect to MongoDB, retrying...\n")
-
-    listToDisplayMongoDBDocumentDetails = []
-
-    if request.method == "POST": # If request from HTML wasn't blank
-        id = request.POST['mongoDB_ID_From_HTML']
-        print("Current ID: " + id)
-        document = collection.find_one({"_id": ObjectId(id)})
-        print(document)
-        return render(request, "searchMongoDBTemplates/editPage.html", 
-                      {'id' : id, 
-                       'year_film': document['year_film'],
-                       'year_ceremony': document['year_ceremony'],
-                       'ceremony': document['ceremony'],
-                       'category': document['category'],
-                       'name': document['name'],
-                       'film': document['film'],
-                       'winner': document['winner']})
+            id = request.POST['mongoDB_ID_From_HTML']
+            print("Current ID: " + id)
+            document = collectionForReadDocument.find_one({"_id": ObjectId(id)})
+            print(document)
+            return render(request, EDIT_PAGE_DIRECTORY, 
+                        {'id' : id, 
+                        'year_film': document['year_film'],
+                        'year_ceremony': document['year_ceremony'],
+                        'ceremony': document['ceremony'],
+                        'category': document['category'],
+                        'name': document['name'],
+                        'film': document['film'],
+                        'winner': document['winner']})
+        # Error if something goes wrong reading database and loading values
+        except Exception as e:
+            print("Error: Something is wrong with the following:")
+            traceback.print_exc()
+            return render(request, SEARCH_RESULTS_DIRECTORY,
+                            {'errorReport': "ERROR: Something went wrong with the MongoDB Preview pane. Was the value acceptable?"})
         
-
+    # If request was blank, then return values as N/A
     else:
-        return render(request, SEARCH_RESULTS_DIRECTORY, {'errorReport': "ERROR: HTML file didn't pass a mongoDB_ID. Contact the teacher to fail us. Check terminal and make sure this doesn't happen again."})
+        print("Current ID: N/A")
+        return render(request, EDIT_PAGE_DIRECTORY, 
+                    {'id' : "N/A", 
+                    'year_film': "N/A",
+                    'year_ceremony': "N/A",
+                    'ceremony': "N/A",
+                    'category': "N/A",
+                    'name': "N/A",
+                    'film': "N/A",
+                    'winner': "N/A"}) 
 
+def mongoDB_IDCreate(request):
+    # Get MongoDB info
+    collectionForNewDocument = connectToMongoDB()
+
+    if request.method == "POST":
+        try:
+            #Add this entry
+            newDoc = {
+            "year_film" : int(request.POST['newYear_FilmInput']), #int
+            "year_ceremony" : int(request.POST['newYear_CeremonyInput']),
+            "ceremony" : int(request.POST['newCeremonyInput']),
+            "category" : request.POST['newCategoryInput'].upper(), #strings
+            "name" : request.POST['newNameInput'],
+            "film" : request.POST['newFilmInput'],
+            "winner" : request.POST['newWinnerInput']
+            }
+        except:
+            print ("Datatype Error. Unable to record values. Form likely incomplete.")
+            return render(request, "searchMongoDBTemplates/events/database_updated.html", {'idToRedirectWith':request.method})
+
+        # Check for duplicate before doing so
+        try:
+            if collectionForNewDocument.find_one(newDoc):
+                print ("A duplicate entry was already found. Therefore no new entry was added.\n")
+            else:
+                newID = collectionForNewDocument.insert_one(newDoc)
+                print ("New entry added.\n")
+                print ("Recorded ID.\n")
+        except:
+            print ("ERROR: Couldn't find or insert.\n")
+            return render(request, "searchMongoDBTemplates/events/database_updated.html", {'idToRedirectWith':request.method})
+
+        return render(request, "searchMongoDBTemplates/events/database_updated.html", {'idToRedirectWith':newID.inserted_id})
+    else:
+        return render(request, "searchMongoDBTemplates/events/database_updated.html", {'idToRedirectWith':request.method})
+    
+def mongoDB_IDEdit(request):
+    # Get MongoDB info
+    collectionToEditDocument = connectToMongoDB()
+    
+    if request.method == "POST":
+        try:
+            editDoc = {
+                "year_film" : int(request.POST['editYear_FilmInput']), #int
+                "year_ceremony" : int(request.POST['editYear_CeremonyInput']),
+                "ceremony" : int(request.POST['editCeremonyInput']),
+                "category" : request.POST['editCategoryInput'].upper(), #strings
+                "name" : request.POST['editNameInput'],
+                "film" : request.POST['editFilmInput'],
+                "winner" : request.POST['editWinnerInput']
+                }
+
+            # Find and update the document
+            if collectionToEditDocument.find_one({"_id": ObjectId(request.POST['idToEdit'])}):
+                collectionToEditDocument.update_one({"_id": ObjectId(request.POST['idToEdit'])}, {"$set": editDoc})
+                print ("\nSelected document updated.\n")
+                return render(request, "searchMongoDBTemplates/events/database_updated.html", {'idToRedirectWith':request.POST['idToEdit']})
+            else:
+                print ("No Documents found matching search term \"" + request.POST['idToDelete'] + "\". Unable to update\n")
+                return render(request, "searchMongoDBTemplates/events/database_updated.html", {'idToRedirectWith':"N/A"})
+                
+        except Exception as e:
+            print("Error: Something is wrong with the following:")
+            traceback.print_exc()
+            return render(request, "searchMongoDBTemplates/events/database_updated.html", {'idToRedirectWith':"POST"})
+
+def mongoDB_IDDelete(request):
+    # Get MongoDB info
+    collectionToDeleteDocument = connectToMongoDB()
+    
+    try:
+        # Find and delete the document
+        if collectionToDeleteDocument.find_one({"_id": ObjectId(request.POST['idToDelete'])}):
+            collectionToDeleteDocument.delete_one({"_id": ObjectId(request.POST['idToDelete'])})
+            print ("\nSelected document deleted.\n")
+        else:
+            print ("No Documents found matching search term \"" + request.POST['idToDelete'] + "\". Unable to delete\n")
+            return render(request, "searchMongoDBTemplates/events/database_updated.html", {'idToRedirectWith':"POST"})
+    except Exception as e:
+        print("Error: Something is wrong with the following:")
+        traceback.print_exc()
+        return render(request, "searchMongoDBTemplates/events/database_updated.html", {'idToRedirectWith':"POST"})
+
+    return render(request, "searchMongoDBTemplates/events/database_updated.html", {'idToRedirectWith':"N/A"})
 
 def search(request):
     # Get the user's search query from the request
