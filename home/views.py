@@ -17,16 +17,16 @@ from home.models import SearchQuery, SearchResult,SearchHistory
 
 # Create your views here.
 
-# TO DO: Not a single comment in sight on so many new lines of code. Please add details as to what is happneing here.
-
+# Define a function to render the home page with today's date
 def home(request):
-    #This can override the HTML file in its entirety!
-    #return HttpResponse("Hello world, this is a python file output!") 
+    # This can override the HTML file in its entirety!
+    # return HttpResponse("Hello world, this is a python file output!") 
 
-    #Create and pass variable to index.html to say the current time
+    # Create and pass variable to index.html to say the current time
     today = datetime.datetime.now().date() 
     return render(request,"home.html", {"today": today})
 
+# Define functions to render other pages
 def about(request):
     return render(request, "about.html")
 
@@ -37,16 +37,15 @@ def history(request):
     return render(request, "history.html" )
 
 def website(request):
-        return render(request, 'movies/website.html')
+    return render(request, 'movies/website.html')
 
-
+# Define API views for movie list and detail. THis is viewed in the admin panel
 @api_view(['GET', 'POST'])
-
 def movie_list(request, format=None):
     
-    #get all the movies from the db
-    #serialize them
-    #return json
+    # Get all the movies from the db
+    # Serialize them
+    # Return json
     
     if request.method == 'GET':
         movies = Movie.objects.all()
@@ -58,7 +57,7 @@ def movie_list(request, format=None):
         if serializer.is_valid():
             serializer.save()
             return Response(serializer.data, status=status.HTTP_201_CREATED)
-        
+
 @api_view(['GET','PUT','DELETE'])        
 def movie_detail(request,id, format=None):
     
@@ -80,8 +79,8 @@ def movie_detail(request,id, format=None):
     elif request.method =='DELETE':
         movies.delete()
         return Response(status=status.HTTP_204_NO_CONTENT)
-    
 
+# Define a function to handle search queries
 def search(request):
     # Get the user's search query from the request
     query = request.GET.get('q')
@@ -92,8 +91,8 @@ def search(request):
         search_query.save()
 
         # Save the search query to the user's search history
-        history_item = SearchHistory(user=request.user, query=query)
-        history_item.save()
+        history_items = SearchHistory(user=request.user, query=query)
+        history_items.save()
 
     # Perform the search
     results = SearchResult.objects.filter(
@@ -101,8 +100,9 @@ def search(request):
     )
 
     # Render the search results template with the search results
-    return render(request, 'search_results.html', {'results': results})
+    return render(request, 'history.html', {'results': results})
 
+# Define functions to handle user authentication
 def login_view(request):
     if request.method == 'POST':
         username = request.POST['username']
@@ -121,12 +121,10 @@ def logout_view(request):
     logout(request)
     return redirect('home')
 
-     
+# Define a function to render the user's search history
 def history_view(request):
     if request.user.is_authenticated:
         history_items = SearchHistory.objects.filter(user=request.user).order_by('-timestamp')
         return render(request, 'history.html', {'history_items': history_items})
     else:
         return redirect('login')
-    
-    
