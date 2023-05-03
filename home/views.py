@@ -91,8 +91,8 @@ def search(request):
         search_query.save()
 
         # Save the search query to the user's search history
-        history_item = SearchHistory(user=request.user, query=query)
-        history_item.save()
+        history_items = SearchHistory(user=request.user, query=query)
+        history_items.save()
 
     # Perform the search
     results = SearchResult.objects.filter(
@@ -100,7 +100,7 @@ def search(request):
     )
 
     # Render the search results template with the search results
-    return render(request, 'search_results.html', {'results': results})
+    return render(request, 'history.html', {'results': results})
 
 # Define functions to handle user authentication
 def login_view(request):

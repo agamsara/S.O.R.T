@@ -166,6 +166,16 @@ def search_results(request):
                     print("Genre: " + response.json()['Genre'])
                     print("IMDB ID: " + response.json()['imdbID'])
                     print("IMDB Ratings: " + response.json()['imdbRating'])
+
+
+                    #SEARCH TRACKING
+                    search_query = SearchQuery(user=request.user, query=val)
+                    search_query.save()
+
+                    # Save the search query to the user's search history
+                    history_item = SearchHistory(user=request.user, query=val)
+                    history_item.save()
+
                     return render(request, SEARCH_RESULTS_DIRECTORY,
                                   {'Title': response.json()['Title'], 
                                    'Poster': response.json()['Poster'], 
