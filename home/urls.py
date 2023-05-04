@@ -22,7 +22,6 @@ urlpatterns = [
     path('login/', views.login_view, name='login'),
     path('logout/', views.logout_view, name='logout'),
     path('history/', views.history_view, name='search_history'),
-    
 ]
 
 urlpatterns = format_suffix_patterns(urlpatterns)

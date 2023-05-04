@@ -1,0 +1,18 @@
+{% extends 'navbar.html' %}
+{% block content %}
+  <center>
+    <h1>Recommended Movies based on past Searches</h1>
+    
+      <div class="container">
+        <div class="row justify-content-center">
+          {% for o in recommended%}
+            <div class="card" style="width: 18rem;">
+              <div class="card-body">
+                <h5 class="card-title">{{o}}</h5> <!--Display film title-->
+              </div>
+            </div>
+          {% endfor %}
+        </div>
+      </div>
+
+{% endblock %}

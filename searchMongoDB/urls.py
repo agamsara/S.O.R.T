@@ -31,7 +31,8 @@ urlpatterns = [
     path('database_create/', views.mongoDB_IDCreate, name='mongoDB_IDCreate'),
     path('database_edit/', views.mongoDB_IDEdit, name='mongoDB_IDEdit'),
     path('database_delete/', views.mongoDB_IDDelete, name='mongoDB_IDDelete'),
- 
+
+    path('recommendations/', views.recommender, name='recommendations'),
 
     #path('search-history/', get_search_history, name='search_history'),
 ]

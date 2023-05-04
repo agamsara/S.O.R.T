@@ -17,6 +17,10 @@ import requests
 # Error handling
 import traceback
 
+# For single movie recommendations
+from sklearn.feature_extraction.text import TfidfVectorizer
+from sklearn.metrics.pairwise import cosine_similarity
+
 #for recommendations
 import pandas as pds
 import difflib
@@ -54,7 +58,6 @@ OMDB_LINK = "https://omdbapi.com/?apikey="
 # recommendations
 movie = pds.read_csv("moviedata.csv")
 features = ['keywords', 'cast', 'genres', 'director', 'tagline']
-
 
 # Create your views here.
 def index(request):
@@ -165,15 +168,11 @@ def search_results(request):
             
             else:
                 return render(request, SEARCH_RESULTS_DIRECTORY, {'errorReport': "\"" + val + "\" is not an acceptable year."})
-
-
         
         # Perhaps val is actually a movie title
         else:
             try:
-                cl = pymongo.MongoClient(CONNECTION_STRING)
-                db = cl['Searches']
-                search_collection = db['SearchesCanary']
+                
 
                 #If search done without a year argument
                 if (yearForSearching == "0"):
@@ -192,22 +191,34 @@ def search_results(request):
                     print("IMDB ID: " + response.json()['imdbID'])
                     print("IMDB Ratings: " + response.json()['imdbRating'])
 
+                    if (response.json()['Plot'] != "N/A"): #If plot can be used to make a recommendation list, make the list
+                        recommendedMovies = singleMovieRecommendations(response.json()['Title'], response.json()['Year'])
+                    else:
+                        #leave empty so that the related movies list prints as none
+                        recommendedMovies = []
 
-                    #SEARCH TRACKING
-                    search_query = SearchQuery(user=request.user, query=val)
-                    search_query.save()
+                    try:
+                        #SEARCH TRACKING
+                        search_query = SearchQuery(user=request.user, query=val)
+                        search_query.save()
 
-                    # Save the search query to the user's search history
-                    history_item = SearchHistory(user=request.user, query=val)
-                    history_item.save()
+                        # Save the search query to the user's search history
+                        history_item = SearchHistory(user=request.user, query=val)
+                        history_item.save()
+                    except:
+                        print("Movie not found!")
+                        return render(request, SEARCH_RESULTS_DIRECTORY,
+                                  {'errorReport': "You need to login for search tracking to work properly."})
+
+                    #Record for recommender
+                    cl = pymongo.MongoClient(CONNECTION_STRING)
+                    db = cl['Searches']
+                    search_collection = db['SearchesCanary']
 
                     movie_search = dict(title=response.json()['Title'],
                                         plot=response.json()['Plot'], director=response.json()['Director'],
                                         genre=response.json()['Genre'], ratings=response.json()['imdbRating'])
                     search_collection.insert_one(movie_search)
-
-                    recommender(search_collection)
-
 
                     return render(request, SEARCH_RESULTS_DIRECTORY,
                                   {'Title': response.json()['Title'], 
@@ -218,8 +229,8 @@ def search_results(request):
                                    'Language': response.json()['Language'],
                                    'Genre' : response.json()['Genre'],
                                    'imdbID' : response.json()['imdbID'],
-                                   'imdbRating' : response.json()['imdbRating']
-                                   })
+                                   'imdbRating' : response.json()['imdbRating'],
+                                   'recommendedMovies' : recommendedMovies})
                 else:
                     print("Movie not found!")
                     return render(request, SEARCH_RESULTS_DIRECTORY,
@@ -233,6 +244,55 @@ def search_results(request):
     # if field blank
     else:
         return render(request, SEARCH_RESULTS_DIRECTORY, {'errorReport': "ERROR: The search bar was blank."})
+
+def singleMovieRecommendations(movieRecommendationSeed, yearOfMovieRecommendationSeed):
+    
+    response = requests.get(OMDB_LINK + OMDB_API_KEY, params={'t': movieRecommendationSeed, 'y': yearOfMovieRecommendationSeed, 'plot': 'full'})
+
+    # Extract information about the movie
+    if response.status_code == 200:
+        data = response.json()
+
+        # Extract plot summary from response
+        plot_summary = data.get('Plot', '')
+
+        # Search for movies similar to the input movie based on plot summary
+        response = requests.get(OMDB_LINK + OMDB_API_KEY, params={'s': movieRecommendationSeed, 'type': 'movie'})
+        data = response.json()
+        search_results = data.get('Search', [])
+
+        # Extract plot summaries from search results
+        plot_summaries = [result.get('Plot', '') for result in search_results]
+
+        # Combine input plot summary with plot summaries from search results
+        all_plot_summaries = [plot_summary] + plot_summaries
+
+        # Vectorize plot summaries using TF-IDF vectorizer
+        vectorizer = TfidfVectorizer(stop_words='english')
+        plot_summary_vectors = vectorizer.fit_transform(all_plot_summaries)
+
+        # Calculate cosine similarity between input movie and search results
+        cosine_similarities = cosine_similarity(plot_summary_vectors[0], plot_summary_vectors[1:])
+
+        # Get indices of top 5 most similar movies
+        top_indices = cosine_similarities.argsort()[0][-5:]
+
+        titlesOfMoviesRecommended = []
+        yearsOfMoviesRecommended = []
+        # Print recommended movies
+        for i in reversed(top_indices):
+            if search_results[i]['Title'] != movieRecommendationSeed:
+                titlesOfMoviesRecommended.append(search_results[i]['Title'])
+                yearsOfMoviesRecommended.append(search_results[i]['Year'])
+        print("Recommendations: ")
+        print(*titlesOfMoviesRecommended, sep = ", ")
+        print(*yearsOfMoviesRecommended, sep = ", ")
+        recommendedMovies = zip(titlesOfMoviesRecommended, yearsOfMoviesRecommended)
+        return recommendedMovies
+
+    else:
+        print(f"Error: {response.status_code}")
+    
 
 # Accept a mongoDB_ID here, Modify depending on user input
 def mongoDB_IDRead(request):
@@ -432,8 +492,11 @@ def combine_features(row):
     except:
         print ("Error:", row)
 
-def recommender(collection):
-
+def recommender(request):
+    cl = pymongo.MongoClient(CONNECTION_STRING)
+    db = cl['Searches']
+    collection = db['SearchesCanary']
+    
     #movies = list(collection.find())
 
     movie = pds.read_csv("moviedata.csv")
@@ -471,6 +534,11 @@ def recommender(collection):
     # for i in ordered:
         # print(i)
     fin = ordered.most_common(10)
+
+    recommendedFilms = []
+
     for i in range(len(fin)):
         print(fin[i][0])
-    return
+        recommendedFilms.append(fin[i][0])
+    
+    return render(request, 'searchMongoDBTemplates/events/recommendedResults.html', {'recommended': recommendedFilms})
