@@ -1,3 +1,9 @@
+
+{% extends 'navbar.html' %}
+
+{% load static %}
+
+{% block content %}
 {% if error_message %}
   <div style="background-color: #ffcccc; color: #cc0000; padding: 10px; margin-bottom: 10px;">
     {{ error_message }}
@@ -15,3 +21,4 @@
   </div>
   <input type="submit" value="Log in" style="background-color: #333; color: #fff; padding: 10px 20px; border: none; border-radius: 3px; cursor: pointer;">
 </form>
+{% endblock %}
