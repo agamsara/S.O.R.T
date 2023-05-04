@@ -17,11 +17,16 @@ import requests
 # Error handling
 import traceback
 
-# For single movie recommendations
-from sklearn.feature_extraction.text import TfidfVectorizer
-from sklearn.metrics.pairwise import cosine_similarity
+#for recommendations
+import pandas as pds
+import difflib
+import numpy as np
+from collections import Counter
 
 from django.shortcuts import render
+from sklearn.feature_extraction.text import CountVectorizer
+from sklearn.metrics.pairwise import cosine_similarity
+
 from home.models import SearchQuery
 from django.contrib.auth import authenticate, login, logout
 from django.shortcuts import render, redirect
@@ -45,6 +50,11 @@ SEARCH_YEAR_TYPE = "year_film"
 #Everything for OMDB
 OMDB_API_KEY = "6c9bb17f&t="
 OMDB_LINK = "https://omdbapi.com/?apikey="
+
+# recommendations
+movie = pds.read_csv("moviedata.csv")
+features = ['keywords', 'cast', 'genres', 'director', 'tagline']
+
 
 # Create your views here.
 def index(request):
@@ -161,6 +171,10 @@ def search_results(request):
         # Perhaps val is actually a movie title
         else:
             try:
+                cl = pymongo.MongoClient(CONNECTION_STRING)
+                db = cl['Searches']
+                search_collection = db['SearchesCanary']
+
                 #If search done without a year argument
                 if (yearForSearching == "0"):
                     response = requests.get(OMDB_LINK + OMDB_API_KEY + val) # Search without year as parameter
@@ -177,24 +191,22 @@ def search_results(request):
                     print("Genre: " + response.json()['Genre'])
                     print("IMDB ID: " + response.json()['imdbID'])
                     print("IMDB Ratings: " + response.json()['imdbRating'])
-                    recommendedMovies = singleMovieRecommendations(response.json()['Title'], response.json()['Year'])
 
-                    try:
-                        #SEARCH TRACKING
-                        search_query = SearchQuery(user=request.user, query=val)
-                        search_query.save()
 
-                        # Save the search query to the user's search history
-                        history_item = SearchHistory(user=request.user, query=val)
-                        history_item.save()
-                        
-                        # Save the search query to a file
-                        save_search(val)
-                    except Exception as e:
-                        print("Error: Something is wrong with the following:")
-                        traceback.print_exc()
-                        return render(request, SEARCH_RESULTS_DIRECTORY,
-                                    {'errorReport': "You are not logged in, and therefore search tracking is not functioning. Log in first."})
+                    #SEARCH TRACKING
+                    search_query = SearchQuery(user=request.user, query=val)
+                    search_query.save()
+
+                    # Save the search query to the user's search history
+                    history_item = SearchHistory(user=request.user, query=val)
+                    history_item.save()
+
+                    movie_search = dict(title=response.json()['Title'],
+                                        plot=response.json()['Plot'], director=response.json()['Director'],
+                                        genre=response.json()['Genre'], ratings=response.json()['imdbRating'])
+                    search_collection.insert_one(movie_search)
+
+                    recommender(search_collection)
 
 
                     return render(request, SEARCH_RESULTS_DIRECTORY,
@@ -206,8 +218,8 @@ def search_results(request):
                                    'Language': response.json()['Language'],
                                    'Genre' : response.json()['Genre'],
                                    'imdbID' : response.json()['imdbID'],
-                                   'imdbRating' : response.json()['imdbRating'],
-                                   'recommendedMovies' : recommendedMovies})
+                                   'imdbRating' : response.json()['imdbRating']
+                                   })
                 else:
                     print("Movie not found!")
                     return render(request, SEARCH_RESULTS_DIRECTORY,
@@ -221,55 +233,6 @@ def search_results(request):
     # if field blank
     else:
         return render(request, SEARCH_RESULTS_DIRECTORY, {'errorReport': "ERROR: The search bar was blank."})
-
-def singleMovieRecommendations(movieRecommendationSeed, yearOfMovieRecommendationSeed):
-    
-    response = requests.get(OMDB_LINK + OMDB_API_KEY, params={'t': movieRecommendationSeed, 'y': yearOfMovieRecommendationSeed, 'plot': 'full'})
-
-    # Extract information about the movie
-    if response.status_code == 200:
-        data = response.json()
-
-        # Extract plot summary from response
-        plot_summary = data.get('Plot', '')
-
-        # Search for movies similar to the input movie based on plot summary
-        response = requests.get(OMDB_LINK + OMDB_API_KEY, params={'s': movieRecommendationSeed, 'type': 'movie'})
-        data = response.json()
-        search_results = data.get('Search', [])
-
-        # Extract plot summaries from search results
-        plot_summaries = [result.get('Plot', '') for result in search_results]
-
-        # Combine input plot summary with plot summaries from search results
-        all_plot_summaries = [plot_summary] + plot_summaries
-
-        # Vectorize plot summaries using TF-IDF vectorizer
-        vectorizer = TfidfVectorizer(stop_words='english')
-        plot_summary_vectors = vectorizer.fit_transform(all_plot_summaries)
-
-        # Calculate cosine similarity between input movie and search results
-        cosine_similarities = cosine_similarity(plot_summary_vectors[0], plot_summary_vectors[1:])
-
-        # Get indices of top 5 most similar movies
-        top_indices = cosine_similarities.argsort()[0][-5:]
-
-        titlesOfMoviesRecommended = []
-        yearsOfMoviesRecommended = []
-        # Print recommended movies
-        print('Recommended movies:')
-        for i in reversed(top_indices):
-            if search_results[i]['Title'] != movieRecommendationSeed:
-                titlesOfMoviesRecommended.append(search_results[i]['Title'])
-                yearsOfMoviesRecommended.append(search_results[i]['Year'])
-        
-        recommendedMovies = zip(titlesOfMoviesRecommended, yearsOfMoviesRecommended)
-        return recommendedMovies
-
-    else:
-        print(f"Error: {response.status_code}")
-    
-    
 
 # Accept a mongoDB_ID here, Modify depending on user input
 def mongoDB_IDRead(request):
@@ -346,11 +309,6 @@ def mongoDB_IDCreate(request):
 
         return render(request, "searchMongoDBTemplates/events/database_updated.html", {'idToRedirectWith':newID.inserted_id})
     else:
-
-        return render(request, SEARCH_RESULTS_DIRECTORY, {'errorReport': "ERROR: HTML file didn't pass a mongoDB_ID. Contact the teacher to fail us. Check terminal and make sure this doesn't happen again."})
-
-
-
         return render(request, "searchMongoDBTemplates/events/database_updated.html", {'idToRedirectWith':request.method})
     
 def mongoDB_IDEdit(request):
@@ -440,15 +398,79 @@ def login_view(request):
 def logout_view(request):
     logout(request)
     return redirect('home')
-    
+
+     
+def history_view(request):
+    if request.user.is_authenticated:
+        history_items = SearchHistory.objects.filter(user=request.user).order_by('-timestamp')
+        return render(request, 'history.html', {'history_items': history_items})
+    else:
+        return redirect('login')
     
 def save_search(query):
-    # Get the current date and time
-    now = datetime.datetime.now()
-    # Format the date and time as a string in the format "YYYY-MM-DD HH:MM:SS"
-    date_string = now.strftime("%Y-%m-%d %H:%M:%S")
-    # Open the file "search_history.txt" in append mode
-    with open("search_history.txt", "a") as f:
-        # Write the search query and timestamp to the file
-        f.write(f"{date_string}: {query}\n")
-  
+    search = SearchHistory(query=query)
+    search.save()
+    
+def get_search_history():
+    searches = SearchHistory.objects.order_by('-timestamp')
+    return searches
+
+def title_from_index(index):
+    return movie[movie.index == index]["title"].values[0]
+
+def index_from_title(title):
+    title_list = movie['title'].tolist()
+    common = difflib.get_close_matches(title, title_list, 1)
+    if not common:
+        print(f"No match found for this title: {title}")
+    titlesim = common[0]
+    return movie[movie.title == titlesim]["index"].values[0]
+
+def combine_features(row):
+    try:
+        return row['keywords'] +" "+row['cast']+" "+row['genres']+" "+row['director']+" "+row['tagline']
+    except:
+        print ("Error:", row)
+
+def recommender(collection):
+
+    #movies = list(collection.find())
+
+    movie = pds.read_csv("moviedata.csv")
+    features = ['keywords', 'cast', 'genres', 'director', 'tagline']
+
+    for feature in features:
+        movie[feature] = movie[feature].fillna('')
+
+    movie["combined_features"] = movie.apply(combine_features,axis=1)
+
+    cv = CountVectorizer()
+    count_matrix = cv.fit_transform(movie["combined_features"])
+    cosine_sim = cosine_similarity(count_matrix)
+
+    realRec = []
+    print(f"\nOther movies similar to previous searches:-\n")
+
+    for movie in collection.find():
+        movie_title = movie['title']
+        movie_index = index_from_title(movie_title)
+
+        similar_movies = list(enumerate(cosine_sim[movie_index]))
+        similar_movies_sorted = sorted(similar_movies, key=lambda x: x[1], reverse=True)
+
+        # print(f"\nOther movies similar to {movie_title}:-\n")
+        for i, rec_movie in enumerate(similar_movies_sorted):
+            if i >= 0 and i < 10:
+                realRec.append(title_from_index(rec_movie[0]))
+                # print(f"{i+1}. {title_from_index(rec_movie[0])}")
+                i=i+1
+            else:
+                break
+    ordered = (Counter(realRec))
+
+    # for i in ordered:
+        # print(i)
+    fin = ordered.most_common(10)
+    for i in range(len(fin)):
+        print(fin[i][0])
+    return
