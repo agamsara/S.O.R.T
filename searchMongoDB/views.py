@@ -155,8 +155,6 @@ def search_results(request):
             
             else:
                 return render(request, SEARCH_RESULTS_DIRECTORY, {'errorReport': "\"" + val + "\" is not an acceptable year."})
-
-
         
         # Perhaps val is actually a movie title
         else:
@@ -177,7 +175,11 @@ def search_results(request):
                     print("Genre: " + response.json()['Genre'])
                     print("IMDB ID: " + response.json()['imdbID'])
                     print("IMDB Ratings: " + response.json()['imdbRating'])
-                    recommendedMovies = singleMovieRecommendations(response.json()['Title'], response.json()['Year'])
+                    if (response.json()['Plot'] != "N/A"): #If plot can be used to make a recommendation list, make the list
+                        recommendedMovies = singleMovieRecommendations(response.json()['Title'], response.json()['Year'])
+                    else:
+                        #leave empty so that the related movies list prints as none
+                        recommendedMovies = []
 
                     try:
                         #SEARCH TRACKING
@@ -262,7 +264,9 @@ def singleMovieRecommendations(movieRecommendationSeed, yearOfMovieRecommendatio
             if search_results[i]['Title'] != movieRecommendationSeed:
                 titlesOfMoviesRecommended.append(search_results[i]['Title'])
                 yearsOfMoviesRecommended.append(search_results[i]['Year'])
-        
+        print("Recommendations: ")
+        print(*titlesOfMoviesRecommended, sep = ", ")
+        print(*yearsOfMoviesRecommended, sep = ", ")
         recommendedMovies = zip(titlesOfMoviesRecommended, yearsOfMoviesRecommended)
         return recommendedMovies
 
@@ -349,9 +353,6 @@ def mongoDB_IDCreate(request):
 
         return render(request, SEARCH_RESULTS_DIRECTORY, {'errorReport': "ERROR: HTML file didn't pass a mongoDB_ID. Contact the teacher to fail us. Check terminal and make sure this doesn't happen again."})
 
-
-
-        return render(request, "searchMongoDBTemplates/events/database_updated.html", {'idToRedirectWith':request.method})
     
 def mongoDB_IDEdit(request):
     # Get MongoDB info
@@ -440,7 +441,6 @@ def login_view(request):
 def logout_view(request):
     logout(request)
     return redirect('home')
-    
     
 def save_search(query):
     # Get the current date and time
