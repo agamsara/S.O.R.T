@@ -8,9 +8,8 @@
       <h1>You searched for "{{ searched }}"</h1>
 
       <!--List results as table reading from list-->
-      <div class="row">
+      <div class="row justify-content-center">
         {% for name,category,winner,film,year,mongoDBID in listToDisplay%}
-          
             <div class="card" style="width: 18rem;">
               <div class="card-body">
                 <h5 class="card-title">{{name}}</h5> <!--Display actor's name at top of card-->
@@ -41,10 +40,15 @@
   
     <!-- If movie title-->
     {% elif Title %}
+    <div class="container">
       <div class="card" style="width: 50rem;">
         <div class="row">
-          <div class="col-md-6">
-            <img src="{{ Poster }}" alt="Movie Poster">
+          <div class="col-md-6 vertical-align: middle">
+            {% if Poster != "N/A" %}
+              <img src="{{ Poster }}" alt="Movie Poster">
+            {% else %}
+              <img src="https://www.prokerala.com/movies/assets/img/no-poster-available.jpg" alt="Movie Poster">
+            {% endif %}
           </div>
           <div class="col-md-5">
             <div class="card-body">
@@ -62,7 +66,34 @@
           </div>
         </div>
       </div>
-      
+    </div>
+
+    <h1>&nbsp;</h1>
+    {% if titlesOfMoviesRecommended in recommendedMovies %} <!--If there are recommendations, display a recommended list below the Search Result-->
+    <h1>Related Movies</h1>
+
+
+      <div class="container">
+        <div class="row justify-content-center">
+          {% for titlesOfMoviesRecommended,yearsOfMoviesRecommended in recommendedMovies%}
+            <div class="card" style="width: 18rem;">
+              <div class="card-body">
+                <h5 class="card-title">{{titlesOfMoviesRecommended}}</h5> <!--Display film title-->
+                <p class="card-text">{{yearsOfMoviesRecommended}}</i></p><!--Display Details of each card-->
+                <form method="POST" action="{% url 'search_results' %}"> <!--This button will open the IMDB Search Page for the user to look at the movie more deeply-->
+                  {% csrf_token %}
+                  <button class="btn btn-primary" name="searchInput" value="{{titlesOfMoviesRecommended}}">View Movie</button> <!-- Press this button to bring up the OMDB details of the film as a autofilled search in the navbar-->
+                  <input type= "hidden" name="searchFilter" value="title"/> <!-- Set and Send search modifier-->
+                  <input type= "hidden" name="yearArgument" value="{{yearsOfMoviesRecommended}}"/> <!-- Set and Send search modifier-->
+                </form>
+              </div>
+            </div>
+          {% endfor %}
+        </div>
+      </div>
+    {% endif %}
+
+    
   <center>
     <!--If The search was empty, invalid, or errored.-->
     {% else %}  

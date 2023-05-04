@@ -17,6 +17,10 @@ import requests
 # Error handling
 import traceback
 
+# For single movie recommendations
+from sklearn.feature_extraction.text import TfidfVectorizer
+from sklearn.metrics.pairwise import cosine_similarity
+
 from django.shortcuts import render
 from home.models import SearchQuery
 from django.contrib.auth import authenticate, login, logout
@@ -173,18 +177,25 @@ def search_results(request):
                     print("Genre: " + response.json()['Genre'])
                     print("IMDB ID: " + response.json()['imdbID'])
                     print("IMDB Ratings: " + response.json()['imdbRating'])
+                    recommendedMovies = singleMovieRecommendations(response.json()['Title'], response.json()['Year'])
 
+                    try:
+                        #SEARCH TRACKING
+                        search_query = SearchQuery(user=request.user, query=val)
+                        search_query.save()
 
-                    #SEARCH TRACKING
-                    search_query = SearchQuery(user=request.user, query=val)
-                    search_query.save()
+                        # Save the search query to the user's search history
+                        history_item = SearchHistory(user=request.user, query=val)
+                        history_item.save()
+                        
+                        # Save the search query to a file
+                        save_search(val)
+                    except Exception as e:
+                        print("Error: Something is wrong with the following:")
+                        traceback.print_exc()
+                        return render(request, SEARCH_RESULTS_DIRECTORY,
+                                    {'errorReport': "You are not logged in, and therefore search tracking is not functioning. Log in first."})
 
-                    # Save the search query to the user's search history
-                    history_item = SearchHistory(user=request.user, query=val)
-                    history_item.save()
-                    
-                    # Save the search query to a file
-                    save_search(val)
 
                     return render(request, SEARCH_RESULTS_DIRECTORY,
                                   {'Title': response.json()['Title'], 
@@ -195,8 +206,8 @@ def search_results(request):
                                    'Language': response.json()['Language'],
                                    'Genre' : response.json()['Genre'],
                                    'imdbID' : response.json()['imdbID'],
-                                   'imdbRating' : response.json()['imdbRating']
-                                   })
+                                   'imdbRating' : response.json()['imdbRating'],
+                                   'recommendedMovies' : recommendedMovies})
                 else:
                     print("Movie not found!")
                     return render(request, SEARCH_RESULTS_DIRECTORY,
@@ -210,6 +221,55 @@ def search_results(request):
     # if field blank
     else:
         return render(request, SEARCH_RESULTS_DIRECTORY, {'errorReport': "ERROR: The search bar was blank."})
+
+def singleMovieRecommendations(movieRecommendationSeed, yearOfMovieRecommendationSeed):
+    
+    response = requests.get(OMDB_LINK + OMDB_API_KEY, params={'t': movieRecommendationSeed, 'y': yearOfMovieRecommendationSeed, 'plot': 'full'})
+
+    # Extract information about the movie
+    if response.status_code == 200:
+        data = response.json()
+
+        # Extract plot summary from response
+        plot_summary = data.get('Plot', '')
+
+        # Search for movies similar to the input movie based on plot summary
+        response = requests.get(OMDB_LINK + OMDB_API_KEY, params={'s': movieRecommendationSeed, 'type': 'movie'})
+        data = response.json()
+        search_results = data.get('Search', [])
+
+        # Extract plot summaries from search results
+        plot_summaries = [result.get('Plot', '') for result in search_results]
+
+        # Combine input plot summary with plot summaries from search results
+        all_plot_summaries = [plot_summary] + plot_summaries
+
+        # Vectorize plot summaries using TF-IDF vectorizer
+        vectorizer = TfidfVectorizer(stop_words='english')
+        plot_summary_vectors = vectorizer.fit_transform(all_plot_summaries)
+
+        # Calculate cosine similarity between input movie and search results
+        cosine_similarities = cosine_similarity(plot_summary_vectors[0], plot_summary_vectors[1:])
+
+        # Get indices of top 5 most similar movies
+        top_indices = cosine_similarities.argsort()[0][-5:]
+
+        titlesOfMoviesRecommended = []
+        yearsOfMoviesRecommended = []
+        # Print recommended movies
+        print('Recommended movies:')
+        for i in reversed(top_indices):
+            if search_results[i]['Title'] != movieRecommendationSeed:
+                titlesOfMoviesRecommended.append(search_results[i]['Title'])
+                yearsOfMoviesRecommended.append(search_results[i]['Year'])
+        
+        recommendedMovies = zip(titlesOfMoviesRecommended, yearsOfMoviesRecommended)
+        return recommendedMovies
+
+    else:
+        print(f"Error: {response.status_code}")
+    
+    
 
 # Accept a mongoDB_ID here, Modify depending on user input
 def mongoDB_IDRead(request):
